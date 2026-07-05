@@ -1,0 +1,109 @@
+/*
+ * Print stylesheet — the shared print foundation for every print view
+ * (05_Printing_Specification.md §1). Imported once from app/layout.tsx.
+ *
+ * Scope: business-agnostic print MECHANICS only — the approved A4 page
+ * geometry and margins, screen/paper visibility helpers, a monochrome-safe
+ * paper reset, page-break utilities, and the on-screen WYSIWYG sheet. It
+ * invents no document content; every printable document supplies its own body
+ * through the PrintLayout scaffold.
+ *
+ * Kept separate from globals.css so the design-token @theme projection stays
+ * pure — the DL-006 / `verify:theme` guard reads only that @theme block. The
+ * theme tokens defined there (spacing, shadow) are reused here via var().
+ */
+
+/* Approved page geometry (05 §1): A4 portrait, 18mm top / 15mm sides / 20mm bottom. */
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 20mm;
+}
+
+/* Reports may declare landscape when the column count requires it (05 §1, 07). */
+@page landscape {
+  size: A4 landscape;
+}
+
+.print-landscape {
+  page: landscape;
+}
+
+/* Content that exists only on paper (e.g. continued markers). */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  /* Screen-only chrome (action bar, buttons) is never printed. */
+  .screen-only {
+    display: none !important;
+  }
+
+  /* Monochrome-safe (05 §1): white paper, black ink. */
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* Never split a table row, the totals block, or the signature strip (05 §1). */
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+
+  /* Repeat table headers on every printed page (05 §6). */
+  .print-repeat-head {
+    display: table-header-group;
+  }
+}
+
+/*
+ * On-screen preview: a print view is WYSIWYG (05 §7), so the screen render is
+ * shaped like the paper it produces — a centered A4 sheet with the approved
+ * margins as padding. On paper the @page margin supplies the geometry, so the
+ * sheet keeps no extra margin or shadow.
+ */
+@media screen {
+  .print-sheet {
+    margin: var(--spacing-lg) auto;
+    max-width: 210mm;
+    min-height: 297mm;
+    padding: 18mm 15mm 20mm;
+    background: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .print-sheet.print-landscape {
+    max-width: 297mm;
+    min-height: 210mm;
+  }
+}
+
+@media print {
+  .print-sheet {
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+/* Draft watermark (05 §7): drafts always watermark; posted never do. No
+ * letter-spacing — it breaks Arabic shaping (05 §1). */
+.print-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.print-watermark span {
+  transform: rotate(-45deg);
+  font-size: 96px;
+  font-weight: 700;
+  color: rgba(17, 24, 39, 0.08);
+}

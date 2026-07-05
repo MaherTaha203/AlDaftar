@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+/*
+ * Global stylesheet — design foundation.
+ *
+ * The @theme block is the Tailwind projection of the canonical design tokens
+ * defined in `lib/theme/*` (aggregated in `lib/theme/index.ts`). Values here are
+ * kept identical to that source of truth; see docs/decision-log.md (DL-006).
+ *
+ * Responsibilities:
+ *   1. Tailwind initialization (the @import above also applies Preflight, the reset).
+ *   2. Design tokens (colors, typography, spacing, radius, shadows, breakpoints).
+ *   3. Right-to-left (RTL) document direction for Arabic.
+ * No component or page styling.
+ */
+
+@theme {
+  /* Colors */
+  --color-primary: #0b5fff;
+  --color-secondary: #6b7280;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+
+  /* Typography */
+  --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --text-base: 16px;
+  --leading-base: 1.5;
+
+  /* Spacing */
+  --spacing-none: 0px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Radius */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.12);
+
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+html {
+  direction: rtl;
+}

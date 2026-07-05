@@ -1,0 +1,189 @@
+'use client';
+
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
+import {
+  getSettingsService,
+  EMPTY_COMPANY_PROFILE,
+  type CompanyProfile,
+} from '@/lib/modules/settings';
+import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
+import { PageLayout } from '@/components/app';
+import { useOperation } from '@/components/framework';
+import { Button, Field, Input, Spinner } from '@/components/ui';
+
+/**
+ * SettingsScreen — screen S-70 (01_System_Workflow.md §7). v1 delivers the
+ * company profile (used on printed documents, P21). Currency, numbering, and
+ * display format are fixed approved constants shown read-only; attachment
+ * limits (BDR-08) and backup (BDR-12) remain pending owner decisions and are
+ * shown as such.
+ */
+const MAX_LOGO_BYTES = 512 * 1024;
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <h2 className="border-b border-neutral-200 px-lg py-md text-sm font-semibold text-neutral-500">
+        {title}
+      </h2>
+      <div className="flex flex-col gap-md p-lg">{children}</div>
+    </section>
+  );
+}
+
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-md border-b border-neutral-100 py-xs text-sm last:border-b-0">
+      <span className="text-neutral-500">{label}</span>
+      <span className="font-medium text-neutral-700">{value}</span>
+    </div>
+  );
+}
+
+export function SettingsScreen() {
+  const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [loaded, setLoaded] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+
+  const { run: load } = useOperation(() => getSettingsService().getProfile());
+  const {
+    run: save,
+    pending: saving,
+    error,
+  } = useOperation((p: CompanyProfile) => getSettingsService().saveProfile(p));
+
+  useEffect(() => {
+    void load().then((r) => {
+      if (r.ok) {
+        setProfile(r.value);
+      }
+      setLoaded(true);
+    });
+  }, [load]);
+
+  const set = (key: keyof CompanyProfile, value: string) => {
+    setProfile((prev) => ({ ...prev, [key]: value }));
+    setSaved(false);
+  };
+
+  function onLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setLogoError(null);
+    if (!file) {
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      setLogoError('حجم الشعار يتجاوز 512 كيلوبايت.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () =>
+      set('logoDataUrl', typeof reader.result === 'string' ? reader.result : '');
+    reader.readAsDataURL(file);
+  }
+
+  async function onSave() {
+    const result = await save(profile);
+    if (result.ok) {
+      setSaved(true);
+    }
+  }
+
+  if (!loaded) {
+    return (
+      <PageLayout title="الإعدادات">
+        <div className="flex justify-center py-2xl">
+          <Spinner />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  return (
+    <PageLayout title="الإعدادات">
+      <div className="flex flex-col gap-lg">
+        <Section title="ملف الشركة">
+          <Field label="اسم الشركة">
+            <Input
+              value={profile.companyName}
+              onChange={(e) => set('companyName', e.target.value)}
+              placeholder="اسم الشركة كما يظهر على المطبوعات"
+            />
+          </Field>
+          <Field label="العنوان">
+            <Input value={profile.address} onChange={(e) => set('address', e.target.value)} />
+          </Field>
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
+            <Field label="الهاتف">
+              <Input value={profile.phone} onChange={(e) => set('phone', e.target.value)} />
+            </Field>
+            <Field label="الرقم الضريبي / السجل">
+              <Input
+                value={profile.taxReference}
+                onChange={(e) => set('taxReference', e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="flex flex-col gap-xs">
+            <span className="text-sm font-medium text-neutral-700">الشعار (للطباعة)</span>
+            <div className="flex items-center gap-md">
+              {profile.logoDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.logoDataUrl}
+                  alt="شعار الشركة"
+                  className="h-16 w-16 rounded-md border border-neutral-200 object-contain"
+                />
+              ) : null}
+              <input type="file" accept="image/*" onChange={onLogoChange} className="text-sm" />
+              {profile.logoDataUrl ? (
+                <Button variant="secondary" size="sm" onClick={() => set('logoDataUrl', '')}>
+                  إزالة
+                </Button>
+              ) : null}
+            </div>
+            {logoError ? <p className="text-sm text-danger">{logoError}</p> : null}
+          </div>
+
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <div className="flex items-center gap-md">
+            <Button onClick={() => void onSave()} loading={saving}>
+              حفظ
+            </Button>
+            {saved ? <span className="text-sm text-success">تم الحفظ</span> : null}
+          </div>
+        </Section>
+
+        <Section title="العملة">
+          <ReadOnlyRow
+            label="عملة الدفتر"
+            value={`${BOOK_CURRENCY.code} (${BOOK_CURRENCY.symbol})`}
+          />
+          <ReadOnlyRow label="المنازل العشرية" value={String(BOOK_CURRENCY.precision)} />
+          <ReadOnlyRow label="التقريب" value="نصفي للأعلى" />
+          <p className="text-xs text-neutral-400">
+            قرار معتمد (BDD-006) — غير قابل للتغيير في هذه النسخة.
+          </p>
+        </Section>
+
+        <Section title="الترقيم والعرض">
+          <ReadOnlyRow label="ترقيم المستندات" value="تسلسل رقمي مستقل لكل نوع، يبدأ من 1" />
+          <ReadOnlyRow label="الأرقام" value="أرقام لاتينية (0-9)" />
+          <ReadOnlyRow label="التاريخ" value="يوم/شهر/سنة (DD/MM/YYYY)" />
+          <p className="text-xs text-neutral-400">
+            قرارات معتمدة (BDD-005 / BDR-17 / BDR-18) — ثابتة في هذه النسخة.
+          </p>
+        </Section>
+
+        <Section title="المرفقات والنسخ الاحتياطي">
+          <p className="text-sm text-neutral-500">
+            حدود المرفقات (BDR-08) وسياسة النسخ الاحتياطي (BDR-12) بانتظار قرار المالك، ولم تُفعَّل
+            خيارات التحكم بها بعد.
+          </p>
+        </Section>
+      </div>
+    </PageLayout>
+  );
+}
