@@ -100,13 +100,46 @@ export interface SupplierStatement {
   readonly closing: number;
 }
 
-/** R-S1 Supplier Statement. Opening defaults to 0 until BDR-06 is decided. */
+/**
+ * Carried-forward balance from the supplier's posted documents strictly
+ * before `from` (07_supplier_statement_effect.md §3.2/§3.4: the statement
+ * must agree with the balance shown everywhere else for any period). The
+ * pre-system opening remains the separate BDR-06 seed.
+ */
+function carriedForward(
+  supplierId: string,
+  snap: Pick<ReportingSnapshot, 'purchases' | 'returns' | 'payments'>,
+  from: string,
+): number {
+  const amounts: number[] = [];
+  for (const p of snap.purchases) {
+    if (isPosted(p) && p.supplierId === supplierId && p.date < from) {
+      amounts.push(purchaseTotal(p.lines));
+    }
+  }
+  for (const r of snap.returns) {
+    if (isPosted(r) && r.supplierId === supplierId && r.date < from) {
+      amounts.push(-returnTotal(r.lines));
+    }
+  }
+  for (const pay of snap.payments) {
+    if (isPosted(pay) && pay.supplierId === supplierId && pay.date < from) {
+      amounts.push(-pay.amount, -pay.discount);
+    }
+  }
+  return sumAmounts(amounts);
+}
+
+/** R-S1 Supplier Statement. `opening` is the pre-system seed (0 until BDR-06). */
 export function buildSupplierStatement(
   supplierId: string,
   snap: Pick<ReportingSnapshot, 'purchases' | 'returns' | 'payments'>,
   range: DateRange = {},
   opening = 0,
 ): SupplierStatement {
+  if (range.from) {
+    opening = sumAmounts([opening, carriedForward(supplierId, snap, range.from)]);
+  }
   interface Raw {
     kind: LedgerKind;
     date: string;

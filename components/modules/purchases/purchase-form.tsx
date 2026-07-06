@@ -378,7 +378,20 @@ export function PurchaseForm({ purchaseId }: PurchaseFormProps) {
         </Field>
 
         <div className="flex justify-end">
-          <Button variant="primary" disabled={busy} onClick={() => setConfirmingPost(true)}>
+          <Button
+            variant="primary"
+            disabled={busy}
+            onClick={() => {
+              // Surface the posting rule (invoice ref XOR the no-invoice flag)
+              // before the confirm dialog, with a named field — the service
+              // still enforces it at post.
+              if (invoiceRef.trim() === '' && !withoutInvoice) {
+                setFormError('أدخل مرجع فاتورة المورد أو حدد «بدون فاتورة مورد» قبل الترحيل.');
+                return;
+              }
+              setConfirmingPost(true);
+            }}
+          >
             ترحيل…
           </Button>
         </div>

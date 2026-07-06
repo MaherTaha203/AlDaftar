@@ -11,6 +11,7 @@ export {
   getAuditService,
   getAuditRepository,
   AUDIT_USER,
+  AUDIT_RECORD_FAILED_EVENT,
   type AuditRepository,
   type AuditRecordInput,
 } from './audit-service';

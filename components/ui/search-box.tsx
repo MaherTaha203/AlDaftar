@@ -80,6 +80,7 @@ export const SearchBox = forwardRef<HTMLInputElement, SearchBoxProps>(function S
         ref={inputRef}
         type="search"
         placeholder={placeholder}
+        aria-label={placeholder}
         {...props}
         value={query}
         onChange={(event) => setQuery(event.target.value)}

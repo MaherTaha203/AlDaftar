@@ -13,6 +13,7 @@ import {
   Button,
   FilterPanel,
   Select,
+  formatDate,
   useToast,
   type DataTableColumn,
   type ViewerItem,
@@ -73,7 +74,7 @@ export function AttachmentsLibrary() {
         contentType: attachment.contentType,
         meta: `${ownerLabels[attachment.ownerType] ?? attachment.ownerType} · ${formatFileSize(
           attachment.size,
-        )} · ${attachment.createdAt.slice(0, 10)}`,
+        )} · ${formatDate(attachment.createdAt)}`,
       },
     });
   }
@@ -102,7 +103,7 @@ export function AttachmentsLibrary() {
       {
         key: 'date',
         header: 'التاريخ',
-        render: (row) => <bdi dir="ltr">{row.createdAt.slice(0, 10)}</bdi>,
+        render: (row) => <bdi dir="ltr">{formatDate(row.createdAt)}</bdi>,
       },
     ],
     [],

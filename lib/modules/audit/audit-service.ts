@@ -24,6 +24,9 @@ export function getAuditRepository(): AuditRepository {
 /** Single-owner identity (PD-18); a constant until multi-user is promoted. */
 export const AUDIT_USER = 'المالك';
 
+/** Window event dispatched when an audit append fails (UI shows a warning). */
+export const AUDIT_RECORD_FAILED_EVENT = 'aldaftar:audit-record-failed';
+
 export interface AuditRecordInput {
   readonly action: AuditAction;
   readonly entityType: string;
@@ -87,12 +90,16 @@ export class AuditService extends ApplicationService {
       const result = await this.repository.create(entry);
       if (!result.ok) {
         // Best-effort at the edge (never a gate), but a gap must be detectable:
-        // record which action/entity failed so it surfaces in the structured log.
+        // record which action/entity failed so it surfaces in the structured log,
+        // and notify the UI so the gap is never silent for the owner either.
         this.logger.warn('audit entry was not recorded', {
           action: input.action,
           entityType: input.entityType,
           entityId: input.entityId,
         });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(AUDIT_RECORD_FAILED_EVENT));
+        }
         throw result.error;
       }
       return result.value;

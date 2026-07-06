@@ -296,18 +296,13 @@ export function ReportView({ reportId }: { reportId: string }) {
           ) : result?.notice ? (
             <EmptyState message={result.notice} />
           ) : result && result.rows.length === 0 ? (
-            <EmptyState message="لا توجد سجلات مطابقة لهذه المعايير." />
+            <div className="flex flex-col gap-md">
+              <ReportMeta meta={result.meta} />
+              <EmptyState message="لا توجد سجلات مطابقة لهذه المعايير." />
+            </div>
           ) : result ? (
             <div className="flex flex-col gap-md">
-              {result.meta && result.meta.length > 0 ? (
-                <div className="flex flex-wrap gap-lg text-sm text-neutral-500">
-                  {result.meta.map((m) => (
-                    <span key={m.label}>
-                      {m.label}: <span className="font-medium text-neutral-700">{m.value}</span>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+              <ReportMeta meta={result.meta} />
               <ReportTable result={result} />
             </div>
           ) : null}
@@ -332,6 +327,22 @@ export function ReportView({ reportId }: { reportId: string }) {
         </div>
       ) : null}
     </>
+  );
+}
+
+/** Report meta line (supplier, opening/closing balance…); hidden when empty. */
+function ReportMeta({ meta }: { meta: ReportResult['meta'] }) {
+  if (!meta || meta.length === 0) {
+    return null;
+  }
+  return (
+    <div className="flex flex-wrap gap-lg text-sm text-neutral-500">
+      {meta.map((m) => (
+        <span key={m.label}>
+          {m.label}: <span className="font-medium text-neutral-700">{m.value}</span>
+        </span>
+      ))}
+    </div>
   );
 }
 
