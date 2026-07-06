@@ -83,7 +83,9 @@ export const QuantityInput = forwardRef<HTMLInputElement, QuantityInputProps>(
           className="h-10 shrink-0"
           icon={<MinusIcon />}
         />
-        <span className="relative inline-block w-full">
+        {/* dir="ltr" so the unit label's inline-end matches the LTR input's
+            `pe-xl` padding side (same fix as MoneyInput). */}
+        <span dir="ltr" className="relative inline-block w-full">
           <input
             ref={ref}
             inputMode="decimal"
