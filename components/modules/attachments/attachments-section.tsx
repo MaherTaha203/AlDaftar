@@ -17,6 +17,7 @@ import {
   Card,
   ConfirmDialog,
   ErrorState,
+  formatDate,
   useToast,
   type ViewerItem,
 } from '../../ui';
@@ -104,7 +105,7 @@ export function AttachmentsSection({
         url,
         title: attachment.title,
         contentType: attachment.contentType,
-        meta: `${formatFileSize(attachment.size)} · ${attachment.createdAt.slice(0, 10)}`,
+        meta: `${formatFileSize(attachment.size)} · ${formatDate(attachment.createdAt)}`,
       },
     });
   }
@@ -134,7 +135,7 @@ export function AttachmentsSection({
               id: a.id,
               title: a.title,
               contentType: a.contentType,
-              meta: `${formatFileSize(a.size)} · ${a.createdAt.slice(0, 10)}`,
+              meta: `${formatFileSize(a.size)} · ${formatDate(a.createdAt)}`,
             }))}
             onView={(item) => void handleView(item)}
             onDelete={

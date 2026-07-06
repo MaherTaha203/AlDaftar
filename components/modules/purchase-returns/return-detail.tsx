@@ -27,6 +27,7 @@ import {
   ErrorState,
   MoneyDisplay,
   Skeleton,
+  formatDate,
   type DataTableColumn,
 } from '../../ui';
 
@@ -152,7 +153,7 @@ export function ReturnDetail({ returnId }: ReturnDetailProps) {
           <div className="flex flex-col gap-xs">
             <dt className="text-xs text-neutral-400">التاريخ</dt>
             <dd className="text-sm">
-              <bdi dir="ltr">{record.date}</bdi>
+              <bdi dir="ltr">{formatDate(record.date)}</bdi>
             </dd>
           </div>
           <div className="flex flex-col gap-xs">
