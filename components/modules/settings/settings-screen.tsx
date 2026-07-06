@@ -137,7 +137,13 @@ export function SettingsScreen() {
                   className="h-16 w-16 rounded-md border border-neutral-200 object-contain"
                 />
               ) : null}
-              <input type="file" accept="image/*" onChange={onLogoChange} className="text-sm" />
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="اختيار ملف الشعار"
+                onChange={onLogoChange}
+                className="text-sm"
+              />
               {profile.logoDataUrl ? (
                 <Button variant="secondary" size="sm" onClick={() => set('logoDataUrl', '')}>
                   إزالة

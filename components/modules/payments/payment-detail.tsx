@@ -14,7 +14,15 @@ import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
 import { PageLayout } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
-import { Button, Card, DocumentStatus, ErrorState, MoneyDisplay, Skeleton } from '../../ui';
+import {
+  Button,
+  Card,
+  DocumentStatus,
+  ErrorState,
+  MoneyDisplay,
+  Skeleton,
+  formatDate,
+} from '../../ui';
 
 /**
  * PaymentDetail — screen S-41. Read-only payment view (amount + separate
@@ -98,7 +106,7 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
           <div className="flex flex-col gap-xs">
             <dt className="text-xs text-neutral-400">التاريخ</dt>
             <dd className="text-sm">
-              <bdi dir="ltr">{payment.date}</bdi>
+              <bdi dir="ltr">{formatDate(payment.date)}</bdi>
             </dd>
           </div>
           <div className="flex flex-col gap-xs">

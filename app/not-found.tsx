@@ -7,7 +7,7 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-md p-lg text-center">
-      <p className="text-2xl font-bold">الصفحة غير موجودة</p>
+      <h1 className="text-2xl font-bold">الصفحة غير موجودة</h1>
       <p className="text-sm text-neutral-500">تعذّر العثور على الصفحة المطلوبة.</p>
       <Link href="/" className="text-sm font-medium text-primary underline">
         العودة إلى الرئيسية

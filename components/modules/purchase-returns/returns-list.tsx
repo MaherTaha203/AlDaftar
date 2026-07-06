@@ -19,6 +19,7 @@ import {
   MoneyDisplay,
   PlusIcon,
   Select,
+  formatDate,
   type DataTableColumn,
 } from '../../ui';
 
@@ -56,7 +57,11 @@ export function ReturnsList() {
         header: 'الرقم',
         render: (row) => (row.number === null ? '—' : <bdi dir="ltr">{row.number}</bdi>),
       },
-      { key: 'date', header: 'التاريخ', render: (row) => <bdi dir="ltr">{row.date}</bdi> },
+      {
+        key: 'date',
+        header: 'التاريخ',
+        render: (row) => <bdi dir="ltr">{formatDate(row.date)}</bdi>,
+      },
       {
         key: 'supplier',
         header: 'المورد',

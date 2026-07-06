@@ -67,7 +67,9 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
   }
 
   return (
-    <span className="relative inline-block w-full">
+    // dir="ltr" so the label's inline-end matches the LTR input's `pe-xl`
+    // padding side — otherwise the label overlays the start of the amount.
+    <span dir="ltr" className="relative inline-block w-full">
       <input
         ref={ref}
         inputMode="decimal"
