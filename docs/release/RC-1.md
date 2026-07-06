@@ -126,3 +126,47 @@ The repository is certified as **Release Candidate v1.0.0-rc.1**. No production
 defect was found within the approved scope. The localStorage persistence
 (TD-004) and the uncommitted git state are release-hygiene / GA items, not
 code defects.
+
+## Addendum — 2026-07-05 (post-certification): Supabase integration landed
+
+GA Requirement 1 is **done** (DL-031): the schema was applied by the owner to
+the configured project; both persistence seams now run on Supabase (records +
+`attachments` Storage bucket); a one-time idempotent local-data import is
+available (`window.aldaftarMigrateLocalData()`); verified live by
+`verify:schema` (21 checks) and 4 integration tests through the real adapter.
+The "Data durability" known limitation above is thereby resolved.
+
+Still open before GA `1.0.0`:
+
+- **Backup/recovery policy (BDR-12)** — decide and enable managed backups.
+- **Access exposure — RESOLVED (DL-032):** single-administrator
+  authentication implemented (login page, AuthGate on every route, persistent
+  session, Login/Logout audit producers) with authenticated-only RLS
+  (`0002_auth_up.sql`). Activation requires two owner steps: apply migration
+  0002, then create the one admin account (`npm run admin:create`).
+- Git commit + tag hygiene (unchanged from above).
+
+## Addendum — 2026-07-05 (Lead-Architect longevity hardening, DL-034/DL-035)
+
+Re-evaluated the 10-year review under the **single-owner** model and implemented
+the reliability/data-safety items; deferred multi-user/scale items with
+justification (see `docs/decision-log.md` DL-034/035 and `docs/technical-debt.md`).
+
+- **Backup & disaster recovery (was BDR-12 gap) — mechanics delivered.**
+  `npm run backup` (full paginated DB export + attachment binaries →
+  `backups/<ts>/` + manifest) and `npm run restore` (idempotent, audit
+  insert-only). Full runbook: `docs/operations/BACKUP_AND_RECOVERY.md` (managed
+  - local layers, DR procedure, RPO/RTO, routine). `backups/` is git-ignored.
+- **Silent data-truncation cliff — closed.** `SupabaseRecordStore.findAll()`
+  now pages through the table, so balances/statements/reports and `nextNumber()`
+  stay correct past the Supabase 1000-row API cap — no architecture change.
+- **Single administrator — now enforced in the database.** Migration
+  `0003_single_admin_up.sql` adds a trigger rejecting any second `auth.users`
+  insert plus an explicit `revoke … from anon`; single-admin no longer depends
+  only on the create-admin script or the dashboard toggle. **Apply order is now
+  `0001 → 0002 → 0003`.**
+- **`.claude/` git-ignored** — also removes the stray `format:check` warning.
+
+Still owner-operational (not code): choose a Supabase backup **plan/schedule**,
+run one **DR rehearsal**, set dashboard "Disable signups" = ON (defense in
+depth), and commit + tag the repository.

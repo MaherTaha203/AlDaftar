@@ -98,3 +98,22 @@ export function getFileStore(): FileStore {
   }
   return store;
 }
+
+/**
+ * Registers (or clears, with null) the file-store implementation — the
+ * binary twin of `setPersistenceProvider`. Called once at cutover by the
+ * Supabase wiring; never by business modules. LocalFileStore remains the
+ * default when nothing is registered.
+ */
+export function setFileStore(next: FileStore | null): void {
+  store = next ?? undefined;
+}
+
+/**
+ * Explicit local (IndexedDB) instance, independent of the registered store.
+ * Exists ONLY for the one-time data migration, which must read the local
+ * binaries after the seam has already been switched to Supabase.
+ */
+export function createLocalFileStore(): FileStore {
+  return new LocalFileStore();
+}

@@ -7,6 +7,12 @@
 type Env = {
   NEXT_PUBLIC_SUPABASE_URL: string;
   NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  /**
+   * Server-only (never NEXT_PUBLIC): present in Node contexts that loaded
+   * `.env.local` (scripts, server build); always undefined in the browser.
+   * Optional — nothing in the application requires it; migration tooling does.
+   */
+  SUPABASE_SERVICE_ROLE_KEY: string | undefined;
   NODE_ENV: string;
 };
 
@@ -29,6 +35,7 @@ if (missing.length) {
 export const env: Env = {
   NEXT_PUBLIC_SUPABASE_URL: NEXT_PUBLIC_SUPABASE_URL as string,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   NODE_ENV,
 };
 

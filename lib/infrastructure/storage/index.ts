@@ -1,4 +1,5 @@
-// Storage abstractions — contracts only, no business-tied implementations.
+// Storage boundary — the IFileStorage contract + the Supabase implementation
+// (GA Foundation). Business-blind: buckets/paths only, no business meaning.
 
 export type {
   IFileStorage,
@@ -7,3 +8,4 @@ export type {
   UploadData,
   UploadOptions,
 } from './file-storage';
+export { SupabaseFileStorage } from './supabase-file-storage';

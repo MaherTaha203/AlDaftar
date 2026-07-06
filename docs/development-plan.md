@@ -40,20 +40,34 @@ Supporting infrastructure delivered this cycle:
 - **Print** — document print views through `PrintLayout`; app-shell chrome is
   `screen-only` so only the sheet prints.
 
-## Current validation state (verified 2026-07-05, Release Candidate audit)
+## Current validation state (verified 2026-07-05, Supabase integration)
 
 - `npm run lint` — pass
 - `npm run typecheck` — pass
-- `npm run test` — pass (104 tests, Vitest)
+- `npm run test` — pass (108 tests, incl. live Supabase-adapter integration)
 - `npm run build` — pass (32 routes + error/not-found boundaries)
 - `npm run verify:theme` — pass (31 tokens in sync)
+- `npm run verify:supabase` — pass (connectivity + both keys)
+- `npm run verify:schema` — pass (21 live checks: tables, bucket, CRUD
+  parity, RLS append-only audit, number uniqueness, storage round-trip)
 - `npm run format:check` — pass (excluding the git-ignored local settings file)
 
-Production hardening added at RC (DL-030): Arabic RTL error boundaries
-(`app/error.tsx`, `app/global-error.tsx`), a 404 page (`app/not-found.tsx`),
-strict ISO date validation before posting, finite-number guards, and CSV
-formula-injection neutralization for exports. Tracked debt: TD-006 (small
-duplicated helpers), TD-007 (report-aggregate rounding) — both Low.
+**Persistence now runs on Supabase (DL-031):** schema applied by the owner
+(`database/migrations/0001_init_up.sql`), both seams switched at the
+composition root, one-time local-data import available via
+`window.aldaftarMigrateLocalData()`. TD-004 removed.
+
+**Single-administrator authentication delivered (DL-032):** `/login`
+(Supabase Auth, email+password, persistent session), `AuthGate` on every app
+route, header sign-out, `Login`/`Logout` audit producers, RLS switched to
+authenticated-only (`0002_auth_up.sql`). **Owner actions to activate:**
+(1) apply `database/migrations/0002_auth_up.sql` in the SQL Editor, then
+(2) create the one admin account: `npm run admin:create -- <email> <password>`.
+
+Production hardening at RC (DL-030): Arabic RTL error boundaries, 404 page,
+strict ISO date validation, finite-number guards, CSV formula-injection
+neutralization. Tracked debt: TD-006 (small duplicated helpers), TD-007
+(report-aggregate rounding) — both Low.
 
 ## Remaining — requires an owner business decision
 

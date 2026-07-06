@@ -50,11 +50,22 @@ function snapshot(value: unknown): string | null {
 }
 
 export class AuditService extends ApplicationService {
-  private readonly repository: AuditRepository;
+  private readonly injected: AuditRepository | undefined;
 
-  constructor(repository: AuditRepository = getAuditRepository()) {
+  constructor(repository?: AuditRepository) {
     super('audit');
-    this.repository = repository;
+    this.injected = repository;
+  }
+
+  /**
+   * Resolved PER OPERATION (unless a test injected one): capturing the
+   * repository at construction let a singleton created before the Supabase
+   * provider registration hold the local store forever — the proven cause of
+   * audit entries silently missing the database (DL-033). Per-call resolution
+   * always reflects the currently registered provider.
+   */
+  private get repository(): AuditRepository {
+    return this.injected ?? getAuditRepository();
   }
 
   /** Appends one immutable entry. Never throws (returns a Result). */

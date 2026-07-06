@@ -2,4 +2,4 @@
 
 export { DatabaseProvider } from './database-provider';
 export type { IDatabaseClient } from './database-client';
-export { ConnectionFactory } from './connection-factory';
+export { ConnectionFactory, getSupabaseClient } from './connection-factory';

@@ -13,10 +13,15 @@ are implemented: Suppliers, Categories, Units, Currencies, Products, Purchases,
 Purchase Returns, Payments (draft → posted lifecycle per the frozen
 architectures), Attachments, plus the cross-cutting **Reporting** read model,
 the **Audit** trail, **Settings**, and the **Dashboard**; document **print
-views** render through `PrintLayout`. Persistence currently uses the interim
-local-store adapter
-behind repository seams (TD-004); the Supabase implementation replaces it at
-one factory when a project is available.
+views** render through `PrintLayout`. Persistence runs on **Supabase**
+(DL-031): records through PostgREST tables, attachment binaries through the
+`attachments` Storage bucket — registered once at the composition root; the
+local adapters remain only as the no-provider default used by tests and as
+the source of the one-time local-data import. Access requires the **single
+administrator's session** (DL-032): `/login` (Supabase Auth, email+password,
+persistent "remember me" session) is the only unauthenticated surface;
+`AuthGate` protects every app route and RLS enforces authenticated-only data
+access at the database.
 
 ## 2. Technology stack (verified from `package.json`)
 
@@ -29,7 +34,7 @@ one factory when a project is available.
 
 | Path                                       | Responsibility                                                                                                                                                                                                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`                                     | Root RTL document + `(app)` route group (shell) + module routes; plus Arabic RTL production boundaries: `error.tsx`, `global-error.tsx`, `not-found.tsx`                                                                                                                        |
+| `app/`                                     | Root RTL document + `/login` (the only unauthenticated surface) + `(app)` route group (AuthGate → shell) + module routes; plus Arabic RTL production boundaries: `error.tsx`, `global-error.tsx`, `not-found.tsx`                                                               |
 | `components/ui`                            | Business-blind primitives (frozen Sprint 1 + master components). Lib-free (DL-012)                                                                                                                                                                                              |
 | `components/layout`                        | Shell chrome: AppShell, Sidebar, Header, Breadcrumb, Toolbar, PageContainer. Lib-free                                                                                                                                                                                           |
 | `components/app`                           | App composition: providers, navigation config, route/breadcrumb utils, PageLayout                                                                                                                                                                                               |
@@ -71,21 +76,31 @@ Document direction RTL throughout.
 
 Client module screens → `useOperation` → module `ApplicationService`
 (Result-based, logged) → repository contract → RepositoryFactory →
-LocalRecordStore (browser localStorage; interim, TD-004). Balances,
-inventory, and reports are calculated from posted documents, never stored:
-`lib/modules/reporting` loads a read snapshot and pure aggregations project it
-into report/dashboard data (writes nothing). The `lib/modules/audit` trail is
-written from module write paths (create/update/delete/post) as an immutable
-append-only record, separate from operational logging (R7). No API routes and
-no server data access yet — introduced when Supabase connects behind the same
-seams.
+**SupabaseRecordStore** (PostgREST; quoted-camelCase columns = record fields,
+jsonb `lines`) — registered by `components/app/persistence-bootstrap.ts` at
+the composition root (DL-031); with no registration (tests) the factory falls
+back to the LocalRecordStore. Attachment binaries: `getFileStore()` →
+`SupabaseFileStore` → Storage bucket `attachments`. Every request carries the
+signed-in administrator's JWT (DL-032); RLS (migration 0002): the
+authenticated role has CRUD on business tables and INSERT+SELECT only on
+`audit` (append-only in depth); the bare anon key can access nothing. Balances, inventory, and reports are calculated from posted documents,
+never stored: `lib/modules/reporting` loads a read snapshot and pure
+aggregations project it into report/dashboard data (writes nothing). The
+`lib/modules/audit` trail is written from module write paths as an immutable
+append-only record, separate from operational logging (R7). Schema lives in
+`database/migrations/0001_init_{up,down}.sql`; no bespoke API routes — the
+client talks to Supabase directly.
 
 ## 8. Build, quality, and CI
 
 Scripts: `dev`, `build`, `start`, `lint`, `lint:fix`, `typecheck`, `test`,
-`test:watch`, `format`, `format:check`, `verify:theme`. CI runs format → lint
-→ typecheck → **test** → theme guard → build. Unit tests use Vitest (DL-019)
-over the pure/technical logic layer. Security/Release workflows unchanged.
+`test:watch`, `format`, `format:check`, `verify:theme`, `verify:supabase`
+(connectivity/auth), `verify:schema` (live tables/RLS/storage checks). CI runs
+format → lint → typecheck → **test** → theme guard → build; the build step
+uses placeholder Supabase values (presence validation only — no network at
+build). Vitest (DL-019) covers the pure/technical layer plus a live
+integration suite for the Supabase adapter that self-skips when no
+`.env.local` is present. Security/Release workflows unchanged.
 
 ## 9. Deployment
 

@@ -1,8 +1,11 @@
 # Next Project — GA Deployment & Supabase Migration
 
-> **Documentation only.** This describes the next engineering project; it is
-> **not** implemented and adds no roadmap features. It exists so the path from
-> Release Candidate (v1.0.0-rc.1) to General Availability (v1.0.0) is defined.
+> **Status (2026-07-05): phases 1–5 delivered** (DL-031) — provisioning/wiring,
+> schema (`database/migrations/0001`), adapters, live parity verification
+> (`verify:schema` + integration tests), and the one-time data import
+> (`window.aldaftarMigrateLocalData()`). **Remaining:** phase 6
+> (backup/recovery — needs BDR-12) and phase 7 (deployment runbooks + GA tag;
+> see the RC-1 addendum for the open access-exposure decision).
 
 ## Project Name
 

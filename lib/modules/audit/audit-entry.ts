@@ -65,4 +65,5 @@ export const AUDIT_ENTITY_LABEL: Record<string, string> = {
   payments: 'المدفوعات',
   attachments: 'المرفقات',
   settings: 'الإعدادات',
+  auth: 'الدخول والخروج',
 };

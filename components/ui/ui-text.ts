@@ -56,4 +56,14 @@ export const uiText = {
     internalNote: 'مستند داخلي',
   },
   menu: 'القائمة',
+  auth: {
+    loginTitle: 'تسجيل الدخول',
+    email: 'البريد الإلكتروني',
+    password: 'كلمة المرور',
+    submit: 'دخول',
+    signingIn: 'جارٍ الدخول…',
+    invalidCredentials: 'بيانات الدخول غير صحيحة',
+    logout: 'تسجيل الخروج',
+    checkingSession: 'جارٍ التحقق من الجلسة…',
+  },
 } as const;

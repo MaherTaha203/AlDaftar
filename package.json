@@ -16,7 +16,12 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify:theme": "node scripts/verify-theme.mjs"
+    "verify:theme": "node scripts/verify-theme.mjs",
+    "verify:supabase": "node scripts/verify-supabase.mjs",
+    "verify:schema": "node scripts/verify-supabase-schema.mjs",
+    "admin:create": "node scripts/create-admin.mjs",
+    "backup": "node scripts/backup.mjs",
+    "restore": "node scripts/restore.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

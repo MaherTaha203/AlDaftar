@@ -7,6 +7,7 @@
  * React, pages, or business modules. No business logic, no schema, no SQL.
  */
 
+export * from './auth';
 export * from './config';
 export * from './database';
 export * from './repositories';

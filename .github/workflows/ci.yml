@@ -34,4 +34,11 @@ jobs:
       - name: Verify theme sync
         run: npm run verify:theme
       - name: Build
+        # Placeholder connection values: the build only validates PRESENCE of
+        # the Supabase variables (lib/config/environment.ts); no network call
+        # happens at build time. Real values are configured on the deployment
+        # platform, never in CI.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
         run: npm run build

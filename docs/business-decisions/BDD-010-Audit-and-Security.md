@@ -22,6 +22,10 @@ kept) and the access/security model for the system and its data.
 
 - The system is **private** and **single-user** (the owner), with **full
   access**. No roles, no multi-user access in v1.
+- **Implemented (DL-032):** exactly one administrator account (Supabase Auth,
+  email + password); every route requires the signed-in session; data access
+  is enforced by authenticated-only RLS. The session persists per device
+  until explicit sign-out ("remember me" — the owner's convenience choice).
 
 ### Audit trail (PD-11)
 
@@ -39,13 +43,15 @@ kept) and the access/security model for the system and its data.
 - **Producers.** The four actions with producers today are wired across the
   existing services: `Create`, `Update`, `Delete` (master data + drafts,
   within the deletion rules of BDR-15/BDR-08), and `Post` (documents).
-- **Reserved actions with no producer yet** (recorded in the vocabulary so the
-  trail is complete, but never emitted until their feature exists):
+- **Reserved action with no producer yet:**
   - `Unpost` — presupposes a reversal/void action, which is the still-pending
-    **BDR-07**; no un-post capability is built here (that would invent
-    behavior forbidden by DL-010).
-  - `Login` / `Logout` — presuppose authentication; the system is currently
-    single-user with no login. They fire only when an auth phase is added.
+    **BDR-07**; no un-post capability is built (that would invent behavior
+    forbidden by DL-010).
+- **`Login` / `Logout` now have producers (DL-032):** the single-administrator
+  authentication records `Login` after a successful sign-in and `Logout`
+  immediately before sign-out (while the session can still write). RLS
+  (migration 0002) additionally enforces the trail's append-only rule at the
+  database: the authenticated role holds INSERT + SELECT only.
 - With a single user, `User` is a constant owner identity and `Device` is the
   capturing client — both stored for forward-compatibility.
 - The Audit Log screen is **read-only**: list, filter by period/module/action,

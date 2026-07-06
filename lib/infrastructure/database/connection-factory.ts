@@ -31,7 +31,15 @@ export const ConnectionFactory = Object.freeze({
   getClient(): IDatabaseClient {
     if (cached === undefined) {
       const { url, anonKey } = infrastructureConfig.database;
-      cached = new SupabaseDatabaseClient(createClient(url, anonKey));
+      // Single-administrator auth with "remember me" (owner decision,
+      // 2026-07-05): the session persists on the device and refreshes itself,
+      // so the admin signs in once and stays signed in until explicit
+      // sign-out. RLS (migration 0002) requires this session for all data.
+      cached = new SupabaseDatabaseClient(
+        createClient(url, anonKey, {
+          auth: { persistSession: true, autoRefreshToken: true },
+        }),
+      );
     }
     return cached;
   },
@@ -46,3 +54,12 @@ export const ConnectionFactory = Object.freeze({
     cached = undefined;
   },
 });
+
+/**
+ * The shared client with its native Supabase typing — the convenience form
+ * infrastructure adapters use (record store, file storage). Same instance as
+ * `ConnectionFactory.getClient()`, just unwrapped.
+ */
+export function getSupabaseClient(): SupabaseClient {
+  return ConnectionFactory.getClient().unwrap<SupabaseClient>();
+}
