@@ -84,6 +84,7 @@ export const REPORTS: readonly ReportDefinition[] = [
         meta: [
           { label: 'المورد', value: supplierName(snap, params.supplierId) },
           { label: 'الرصيد الافتتاحي', value: String(statement.opening) },
+          { label: 'الرصيد الختامي', value: String(statement.closing) },
         ],
       };
     },

@@ -194,6 +194,23 @@ describe('buildSupplierStatement', () => {
     // p2 (draft, 9 × 99) would swamp the totals if included.
     expect(statement.totalDebit).toBe(130);
   });
+
+  it('carries posted history before `from` into the opening balance', () => {
+    // Range starts after the purchase (130) and payment (40 + 10 discount):
+    // opening = 130 − 50 = 80; only the return (−50) falls inside the range.
+    const ranged = buildSupplierStatement('s1', scenario, { from: '2026-01-16' });
+    expect(ranged.opening).toBe(80);
+    expect(ranged.rows.map((r) => r.kind)).toEqual(['return']);
+    expect(ranged.rows[0].balance).toBe(30);
+    expect(ranged.closing).toBe(30);
+  });
+
+  it('reports the full balance as opening when the range excludes all documents', () => {
+    const ranged = buildSupplierStatement('s1', scenario, { from: '2026-02-01' });
+    expect(ranged.opening).toBe(30);
+    expect(ranged.rows).toHaveLength(0);
+    expect(ranged.closing).toBe(30);
+  });
 });
 
 describe('computeSupplierBalances', () => {
