@@ -127,3 +127,13 @@ html {
     box-shadow: inset -3px 0 0 var(--color-primary);
   }
 }
+
+/*
+ * Focus mode (Productivity Sprint #8). While editing a long document, collapse
+ * the workspace chrome — the sidebar and the productivity bar — so the content
+ * area gets the full width and a calmer field. Marked elements simply hide;
+ * the focus toggle in the header stays visible as the way back out.
+ */
+:root[data-focus='on'] .app-focus-collapsible {
+  display: none;
+}

@@ -11,6 +11,7 @@ import {
 } from '@/lib/modules/purchases';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
+import { SupplierReference } from '../suppliers/supplier-preview';
 import { ListPage, useOperation } from '../../framework';
 import {
   Button,
@@ -19,11 +20,14 @@ import {
   FilterPanel,
   MissingInvoiceBadge,
   MoneyDisplay,
+  PanelIcon,
+  PeekField,
   PencilIcon,
   PlusIcon,
   PrinterIcon,
   RowActions,
   Select,
+  SideDetailPanel,
   formatDate,
   type DataTableColumn,
   type RowAction,
@@ -49,6 +53,7 @@ export function PurchasesList() {
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [peek, setPeek] = useState<Purchase | null>(null);
 
   const { run: load, pending, error } = useOperation(() => getPurchaseService().list());
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
@@ -59,6 +64,7 @@ export function PurchasesList() {
   }, [load, loadSuppliers]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+  const supplierById = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), [suppliers]);
 
   const columns = useMemo<readonly DataTableColumn<Purchase>[]>(
     () => [
@@ -75,7 +81,7 @@ export function PurchasesList() {
       {
         key: 'supplier',
         header: 'المورد',
-        render: (row) => supplierName.get(row.supplierId) ?? '—',
+        render: (row) => <SupplierReference supplier={supplierById.get(row.supplierId)} />,
       },
       {
         key: 'invoice',
@@ -104,7 +110,7 @@ export function PurchasesList() {
         render: (row) => <DocumentStatus state={row.status} />,
       },
     ],
-    [supplierName],
+    [supplierById],
   );
 
   const filtered = useMemo(() => {
@@ -154,123 +160,178 @@ export function PurchasesList() {
   const isFiltered = query.trim() !== '' || chips.length > 0;
 
   return (
-    <ListPage
-      onNew={() => router.push('/purchases/new')}
-      primaryAction={
-        <Link href="/purchases/new">
-          <Button icon={<PlusIcon />}>شراء جديد</Button>
-        </Link>
-      }
-      search={{
-        placeholder: 'بحث بالرقم أو المورد أو مرجع الفاتورة…',
-        onQueryChange: (value) => {
-          setQuery(value);
-          setPage(1);
-        },
-      }}
-      toolbarActions={
-        <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
-          تصفية
-        </Button>
-      }
-      filters={
-        <FilterPanel
-          open={filtersOpen}
-          chips={chips}
-          onRemoveChip={(key) => {
-            if (key === 'status') {
-              setStatusFilter('all');
-            } else {
-              setInvoiceFilter('all');
-            }
-            setPage(1);
-          }}
-          onClearAll={() => {
-            setStatusFilter('all');
-            setInvoiceFilter('all');
-            setPage(1);
-          }}
-        >
-          <label className="flex items-center gap-sm text-sm text-neutral-500">
-            الحالة
-            <Select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as StatusFilter);
-                setPage(1);
-              }}
-              className="w-36"
-            >
-              <option value="all">الكل</option>
-              <option value={PurchaseStatus.Draft}>مسودة</option>
-              <option value={PurchaseStatus.Posted}>مرحّل</option>
-            </Select>
-          </label>
-          <label className="flex items-center gap-sm text-sm text-neutral-500">
-            فاتورة المورد
-            <Select
-              value={invoiceFilter}
-              onChange={(e) => {
-                setInvoiceFilter(e.target.value as InvoiceFilter);
-                setPage(1);
-              }}
-              className="w-44"
-            >
-              <option value="all">الكل</option>
-              <option value="with">بفاتورة</option>
-              <option value="without">بدون فاتورة</option>
-            </Select>
-          </label>
-        </FilterPanel>
-      }
-      columns={columns}
-      rows={pageRows}
-      rowKey={(row) => row.id}
-      onRowClick={(row) =>
-        router.push(
-          row.status === PurchaseStatus.Draft
-            ? `/purchases/${row.id}/edit`
-            : `/purchases/${row.id}`,
-        )
-      }
-      rowActions={(row) => {
-        const isDraft = row.status === PurchaseStatus.Draft;
-        const actions: RowAction[] = [
-          {
-            key: 'view',
-            label: 'عرض',
-            icon: <EyeIcon />,
-            onSelect: () => router.push(`/purchases/${row.id}`),
-          },
-        ];
-        if (isDraft) {
-          actions.push({
-            key: 'edit',
-            label: 'تعديل',
-            icon: <PencilIcon />,
-            onSelect: () => router.push(`/purchases/${row.id}/edit`),
-          });
-        }
-        actions.push({
-          key: 'print',
-          label: 'طباعة',
-          icon: <PrinterIcon />,
-          onSelect: () => router.push(`/purchases/${row.id}/print`),
-        });
-        return <RowActions actions={actions} />;
-      }}
-      loading={pending && purchases.length === 0}
-      error={error}
-      onRetry={() => void load().then((r) => r.ok && setPurchases(r.value))}
-      emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مشتريات بعد'}
-      emptyAction={
-        isFiltered ? undefined : (
+    <>
+      <ListPage
+        onNew={() => router.push('/purchases/new')}
+        primaryAction={
           <Link href="/purchases/new">
-            <Button variant="secondary">شراء جديد</Button>
+            <Button icon={<PlusIcon />}>شراء جديد</Button>
           </Link>
-        )
-      }
-      pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
-    />
+        }
+        search={{
+          placeholder: 'بحث بالرقم أو المورد أو مرجع الفاتورة…',
+          onQueryChange: (value) => {
+            setQuery(value);
+            setPage(1);
+          },
+        }}
+        toolbarActions={
+          <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
+            تصفية
+          </Button>
+        }
+        filters={
+          <FilterPanel
+            open={filtersOpen}
+            chips={chips}
+            onRemoveChip={(key) => {
+              if (key === 'status') {
+                setStatusFilter('all');
+              } else {
+                setInvoiceFilter('all');
+              }
+              setPage(1);
+            }}
+            onClearAll={() => {
+              setStatusFilter('all');
+              setInvoiceFilter('all');
+              setPage(1);
+            }}
+          >
+            <label className="flex items-center gap-sm text-sm text-neutral-500">
+              الحالة
+              <Select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="w-36"
+              >
+                <option value="all">الكل</option>
+                <option value={PurchaseStatus.Draft}>مسودة</option>
+                <option value={PurchaseStatus.Posted}>مرحّل</option>
+              </Select>
+            </label>
+            <label className="flex items-center gap-sm text-sm text-neutral-500">
+              فاتورة المورد
+              <Select
+                value={invoiceFilter}
+                onChange={(e) => {
+                  setInvoiceFilter(e.target.value as InvoiceFilter);
+                  setPage(1);
+                }}
+                className="w-44"
+              >
+                <option value="all">الكل</option>
+                <option value="with">بفاتورة</option>
+                <option value="without">بدون فاتورة</option>
+              </Select>
+            </label>
+          </FilterPanel>
+        }
+        columns={columns}
+        rows={pageRows}
+        rowKey={(row) => row.id}
+        onRowClick={(row) =>
+          router.push(
+            row.status === PurchaseStatus.Draft
+              ? `/purchases/${row.id}/edit`
+              : `/purchases/${row.id}`,
+          )
+        }
+        rowActions={(row) => {
+          const isDraft = row.status === PurchaseStatus.Draft;
+          const actions: RowAction[] = [
+            {
+              key: 'peek',
+              label: 'معاينة',
+              icon: <PanelIcon />,
+              onSelect: () => setPeek(row),
+            },
+            {
+              key: 'view',
+              label: 'عرض',
+              icon: <EyeIcon />,
+              onSelect: () => router.push(`/purchases/${row.id}`),
+            },
+          ];
+          if (isDraft) {
+            actions.push({
+              key: 'edit',
+              label: 'تعديل',
+              icon: <PencilIcon />,
+              onSelect: () => router.push(`/purchases/${row.id}/edit`),
+            });
+          }
+          actions.push({
+            key: 'print',
+            label: 'طباعة',
+            icon: <PrinterIcon />,
+            onSelect: () => router.push(`/purchases/${row.id}/print`),
+          });
+          return <RowActions actions={actions} />;
+        }}
+        loading={pending && purchases.length === 0}
+        error={error}
+        onRetry={() => void load().then((r) => r.ok && setPurchases(r.value))}
+        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مشتريات بعد'}
+        emptyAction={
+          isFiltered ? undefined : (
+            <Link href="/purchases/new">
+              <Button variant="secondary">شراء جديد</Button>
+            </Link>
+          )
+        }
+        pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
+      />
+
+      <SideDetailPanel
+        open={peek !== null}
+        onClose={() => setPeek(null)}
+        title={peek?.number === null ? 'مسودة شراء' : `شراء رقم ${peek?.number}`}
+        subtitle={peek ? <DocumentStatus state={peek.status} /> : undefined}
+        onOpenFullPage={
+          peek
+            ? () => {
+                const target = peek;
+                setPeek(null);
+                router.push(
+                  target.status === PurchaseStatus.Draft
+                    ? `/purchases/${target.id}/edit`
+                    : `/purchases/${target.id}`,
+                );
+              }
+            : undefined
+        }
+      >
+        {peek ? (
+          <dl>
+            <PeekField label="المورد">{supplierName.get(peek.supplierId) ?? '—'}</PeekField>
+            <PeekField label="التاريخ">
+              <bdi dir="ltr">{formatDate(peek.date)}</bdi>
+            </PeekField>
+            <PeekField label="فاتورة المورد">
+              {peek.withoutSupplierInvoice ? (
+                <MissingInvoiceBadge />
+              ) : peek.supplierInvoiceRef === '' ? (
+                '—'
+              ) : (
+                <bdi dir="ltr">{peek.supplierInvoiceRef}</bdi>
+              )}
+            </PeekField>
+            <PeekField label="عدد الأصناف">{peek.lines.length}</PeekField>
+            <PeekField label="الإجمالي">
+              <span className="font-semibold">
+                <MoneyDisplay
+                  value={purchaseTotal(peek.lines)}
+                  currencyLabel={BOOK_CURRENCY.symbol}
+                />
+              </span>
+            </PeekField>
+          </dl>
+        ) : null}
+      </SideDetailPanel>
+    </>
   );
 }

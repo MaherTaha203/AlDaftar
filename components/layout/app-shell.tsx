@@ -48,7 +48,7 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
         className,
       )}
     >
-      <div className="screen-only max-md:hidden">
+      <div className="app-focus-collapsible screen-only max-md:hidden">
         <Sidebar {...sidebar} />
       </div>
 

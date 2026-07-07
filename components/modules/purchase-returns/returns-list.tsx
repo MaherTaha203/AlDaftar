@@ -11,6 +11,7 @@ import {
 } from '@/lib/modules/purchase-returns';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
+import { SupplierReference } from '../suppliers/supplier-preview';
 import { ListPage, useOperation } from '../../framework';
 import {
   Button,
@@ -18,11 +19,14 @@ import {
   EyeIcon,
   FilterPanel,
   MoneyDisplay,
+  PanelIcon,
+  PeekField,
   PencilIcon,
   PlusIcon,
   PrinterIcon,
   RowActions,
   Select,
+  SideDetailPanel,
   formatDate,
   type DataTableColumn,
   type RowAction,
@@ -44,6 +48,7 @@ export function ReturnsList() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [peek, setPeek] = useState<PurchaseReturn | null>(null);
 
   const { run: load, pending, error } = useOperation(() => getPurchaseReturnService().list());
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
@@ -54,6 +59,7 @@ export function ReturnsList() {
   }, [load, loadSuppliers]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+  const supplierById = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), [suppliers]);
 
   const columns = useMemo<readonly DataTableColumn<PurchaseReturn>[]>(
     () => [
@@ -70,7 +76,7 @@ export function ReturnsList() {
       {
         key: 'supplier',
         header: 'المورد',
-        render: (row) => supplierName.get(row.supplierId) ?? '—',
+        render: (row) => <SupplierReference supplier={supplierById.get(row.supplierId)} />,
       },
       {
         key: 'total',
@@ -82,7 +88,7 @@ export function ReturnsList() {
       },
       { key: 'status', header: 'الحالة', render: (row) => <DocumentStatus state={row.status} /> },
     ],
-    [supplierName],
+    [supplierById],
   );
 
   const filtered = useMemo(() => {
@@ -103,108 +109,154 @@ export function ReturnsList() {
   const isFiltered = query.trim() !== '' || statusFilter !== 'all';
 
   return (
-    <ListPage
-      onNew={() => router.push('/purchase-returns/new')}
-      primaryAction={
-        <Link href="/purchase-returns/new">
-          <Button icon={<PlusIcon />}>مرتجع جديد</Button>
-        </Link>
-      }
-      search={{
-        placeholder: 'بحث بالرقم أو المورد…',
-        onQueryChange: (value) => {
-          setQuery(value);
-          setPage(1);
-        },
-      }}
-      toolbarActions={
-        <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
-          تصفية
-        </Button>
-      }
-      filters={
-        <FilterPanel
-          open={filtersOpen}
-          chips={
-            statusFilter === 'all'
-              ? []
-              : [
-                  {
-                    key: 'status',
-                    label: `الحالة: ${statusFilter === ReturnStatus.Draft ? 'مسودة' : 'مرحّل'}`,
-                  },
-                ]
-          }
-          onRemoveChip={() => {
-            setStatusFilter('all');
-            setPage(1);
-          }}
-        >
-          <label className="flex items-center gap-sm text-sm text-neutral-500">
-            الحالة
-            <Select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as StatusFilter);
-                setPage(1);
-              }}
-              className="w-36"
-            >
-              <option value="all">الكل</option>
-              <option value={ReturnStatus.Draft}>مسودة</option>
-              <option value={ReturnStatus.Posted}>مرحّل</option>
-            </Select>
-          </label>
-        </FilterPanel>
-      }
-      columns={columns}
-      rows={pageRows}
-      rowKey={(row) => row.id}
-      onRowClick={(row) =>
-        router.push(
-          row.status === ReturnStatus.Draft
-            ? `/purchase-returns/${row.id}/edit`
-            : `/purchase-returns/${row.id}`,
-        )
-      }
-      rowActions={(row) => {
-        const isDraft = row.status === ReturnStatus.Draft;
-        const actions: RowAction[] = [
-          {
-            key: 'view',
-            label: 'عرض',
-            icon: <EyeIcon />,
-            onSelect: () => router.push(`/purchase-returns/${row.id}`),
-          },
-        ];
-        if (isDraft) {
-          actions.push({
-            key: 'edit',
-            label: 'تعديل',
-            icon: <PencilIcon />,
-            onSelect: () => router.push(`/purchase-returns/${row.id}/edit`),
-          });
-        }
-        actions.push({
-          key: 'print',
-          label: 'طباعة',
-          icon: <PrinterIcon />,
-          onSelect: () => router.push(`/purchase-returns/${row.id}/print`),
-        });
-        return <RowActions actions={actions} />;
-      }}
-      loading={pending && returns.length === 0}
-      error={error}
-      onRetry={() => void load().then((r) => r.ok && setReturns(r.value))}
-      emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مرتجعات بعد'}
-      emptyAction={
-        isFiltered ? undefined : (
+    <>
+      <ListPage
+        onNew={() => router.push('/purchase-returns/new')}
+        primaryAction={
           <Link href="/purchase-returns/new">
-            <Button variant="secondary">مرتجع جديد</Button>
+            <Button icon={<PlusIcon />}>مرتجع جديد</Button>
           </Link>
-        )
-      }
-      pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
-    />
+        }
+        search={{
+          placeholder: 'بحث بالرقم أو المورد…',
+          onQueryChange: (value) => {
+            setQuery(value);
+            setPage(1);
+          },
+        }}
+        toolbarActions={
+          <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
+            تصفية
+          </Button>
+        }
+        filters={
+          <FilterPanel
+            open={filtersOpen}
+            chips={
+              statusFilter === 'all'
+                ? []
+                : [
+                    {
+                      key: 'status',
+                      label: `الحالة: ${statusFilter === ReturnStatus.Draft ? 'مسودة' : 'مرحّل'}`,
+                    },
+                  ]
+            }
+            onRemoveChip={() => {
+              setStatusFilter('all');
+              setPage(1);
+            }}
+          >
+            <label className="flex items-center gap-sm text-sm text-neutral-500">
+              الحالة
+              <Select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="w-36"
+              >
+                <option value="all">الكل</option>
+                <option value={ReturnStatus.Draft}>مسودة</option>
+                <option value={ReturnStatus.Posted}>مرحّل</option>
+              </Select>
+            </label>
+          </FilterPanel>
+        }
+        columns={columns}
+        rows={pageRows}
+        rowKey={(row) => row.id}
+        onRowClick={(row) =>
+          router.push(
+            row.status === ReturnStatus.Draft
+              ? `/purchase-returns/${row.id}/edit`
+              : `/purchase-returns/${row.id}`,
+          )
+        }
+        rowActions={(row) => {
+          const isDraft = row.status === ReturnStatus.Draft;
+          const actions: RowAction[] = [
+            {
+              key: 'peek',
+              label: 'معاينة',
+              icon: <PanelIcon />,
+              onSelect: () => setPeek(row),
+            },
+            {
+              key: 'view',
+              label: 'عرض',
+              icon: <EyeIcon />,
+              onSelect: () => router.push(`/purchase-returns/${row.id}`),
+            },
+          ];
+          if (isDraft) {
+            actions.push({
+              key: 'edit',
+              label: 'تعديل',
+              icon: <PencilIcon />,
+              onSelect: () => router.push(`/purchase-returns/${row.id}/edit`),
+            });
+          }
+          actions.push({
+            key: 'print',
+            label: 'طباعة',
+            icon: <PrinterIcon />,
+            onSelect: () => router.push(`/purchase-returns/${row.id}/print`),
+          });
+          return <RowActions actions={actions} />;
+        }}
+        loading={pending && returns.length === 0}
+        error={error}
+        onRetry={() => void load().then((r) => r.ok && setReturns(r.value))}
+        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مرتجعات بعد'}
+        emptyAction={
+          isFiltered ? undefined : (
+            <Link href="/purchase-returns/new">
+              <Button variant="secondary">مرتجع جديد</Button>
+            </Link>
+          )
+        }
+        pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
+      />
+
+      <SideDetailPanel
+        open={peek !== null}
+        onClose={() => setPeek(null)}
+        title={peek?.number === null ? 'مسودة مرتجع' : `مرتجع رقم ${peek?.number}`}
+        subtitle={peek ? <DocumentStatus state={peek.status} /> : undefined}
+        onOpenFullPage={
+          peek
+            ? () => {
+                const target = peek;
+                setPeek(null);
+                router.push(
+                  target.status === ReturnStatus.Draft
+                    ? `/purchase-returns/${target.id}/edit`
+                    : `/purchase-returns/${target.id}`,
+                );
+              }
+            : undefined
+        }
+      >
+        {peek ? (
+          <dl>
+            <PeekField label="المورد">{supplierName.get(peek.supplierId) ?? '—'}</PeekField>
+            <PeekField label="التاريخ">
+              <bdi dir="ltr">{formatDate(peek.date)}</bdi>
+            </PeekField>
+            <PeekField label="عدد الأصناف">{peek.lines.length}</PeekField>
+            <PeekField label="إجمالي المرتجع">
+              <span className="font-semibold">
+                <MoneyDisplay
+                  value={returnTotal(peek.lines)}
+                  currencyLabel={BOOK_CURRENCY.symbol}
+                />
+              </span>
+            </PeekField>
+          </dl>
+        ) : null}
+      </SideDetailPanel>
+    </>
   );
 }
