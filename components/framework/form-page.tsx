@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import type { FormEvent, ReactNode } from 'react';
 import { PageLayout } from '../app';
+import { useShortcut } from '../app/use-shortcut';
 import { Button } from '../ui';
 import { useDirtyGuard } from './use-dirty-guard';
 
@@ -52,6 +53,8 @@ export function FormPage({
 }: FormPageProps) {
   const router = useRouter();
   useDirtyGuard(dirty && !busy);
+  // Ctrl+S saves the current form (only while it's actionable).
+  useShortcut('save', () => onSubmit(), !busy);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

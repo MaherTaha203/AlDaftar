@@ -64,3 +64,34 @@
 html {
   direction: rtl;
 }
+
+/*
+ * Density modes (Productivity Sprint #7). Unlayered rules — they win over the
+ * @theme layer — so they never touch the verify:theme projection. Density
+ * rescales ONLY semantic spacing tokens, table row height, and control height;
+ * typography, color, radius, and the numeric spacing scale are untouched, so
+ * hierarchy and brand identity are preserved. `comfortable` is the default
+ * (the @theme values); the attribute is set on <html> before paint.
+ */
+:root {
+  --tbl-row-h: 3rem; /* 48px */
+  --ctrl-h: 2.5rem; /* 40px */
+}
+:root[data-density='compact'] {
+  --spacing-xs: 3px;
+  --spacing-sm: 6px;
+  --spacing-md: 12px;
+  --spacing-lg: 18px;
+  --spacing-xl: 24px;
+  --tbl-row-h: 2.5rem; /* 40px */
+  --ctrl-h: 2.25rem; /* 36px */
+}
+:root[data-density='spacious'] {
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 20px;
+  --spacing-lg: 30px;
+  --spacing-xl: 40px;
+  --tbl-row-h: 3.5rem; /* 56px */
+  --ctrl-h: 2.75rem; /* 44px */
+}

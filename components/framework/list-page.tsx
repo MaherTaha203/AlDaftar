@@ -1,7 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { PageLayout } from '../app';
+import { useShortcut } from '../app/use-shortcut';
 import { Toolbar } from '../layout';
 import {
   DataTable,
@@ -39,6 +40,8 @@ export interface ListPageProps<TRow> {
   search?: ListPageSearch;
   /** End-of-toolbar actions (filter toggle, print, export). */
   toolbarActions?: ReactNode;
+  /** Ctrl+N handler (create). When omitted, Ctrl+N opens the command palette. */
+  onNew?: () => void;
   /** Filter chrome (FilterPanel) rendered under the toolbar. */
   filters?: ReactNode;
   columns: readonly DataTableColumn<TRow>[];
@@ -63,6 +66,7 @@ export function ListPage<TRow>({
   primaryAction,
   search,
   toolbarActions,
+  onNew,
   filters,
   columns,
   rows,
@@ -79,6 +83,12 @@ export function ListPage<TRow>({
   pagination,
 }: ListPageProps<TRow>) {
   const showToolbar = search !== undefined || toolbarActions !== undefined;
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Ctrl+F focuses the in-page search (falls back to native find where absent);
+  // Ctrl+N creates when the page provides a handler.
+  useShortcut('search', () => searchRef.current?.focus(), search !== undefined);
+  useShortcut('new', () => onNew?.(), onNew !== undefined);
 
   return (
     <PageLayout
@@ -92,6 +102,7 @@ export function ListPage<TRow>({
                 search={
                   search !== undefined ? (
                     <SearchBox
+                      ref={searchRef}
                       onQueryChange={search.onQueryChange}
                       initialQuery={search.initialQuery}
                       placeholder={search.placeholder}
@@ -123,6 +134,11 @@ export function ListPage<TRow>({
           onSortChange={onSortChange}
           rowActions={rowActions}
           loading={loading}
+          // Bound the table to the viewport so long lists scroll internally
+          // with a frozen header (Productivity Sprint #2) instead of pushing
+          // the toolbar off-screen. Short lists never reach the cap.
+          stickyHeader
+          maxHeight="calc(100dvh - 13rem)"
           emptyState={<EmptyState message={emptyMessage} action={emptyAction} />}
         />
       )}

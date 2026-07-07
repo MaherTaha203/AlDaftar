@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useShortcut } from '../app/use-shortcut';
 import { Button, cn, uiText } from '../ui';
 
 /**
@@ -71,6 +72,9 @@ export function PrintLayout({
       window.print();
     }
   }
+
+  // Ctrl+P prints the current document (our print view, not the raw page).
+  useShortcut('print', handlePrint);
 
   return (
     <>

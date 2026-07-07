@@ -79,7 +79,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(function
           size="sm"
           disabled={disabled}
           onClick={() => onValueChange(todayIso())}
-          className="h-10 shrink-0"
+          className="h-[var(--ctrl-h)] shrink-0"
         >
           {todayLabel}
         </Button>

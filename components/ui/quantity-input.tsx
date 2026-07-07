@@ -80,7 +80,7 @@ export const QuantityInput = forwardRef<HTMLInputElement, QuantityInputProps>(
           aria-label={decrementLabel}
           disabled={disabled || (value !== null && value <= min)}
           onClick={() => stepBy(-step)}
-          className="h-10 shrink-0"
+          className="h-[var(--ctrl-h)] shrink-0"
           icon={<MinusIcon />}
         />
         {/* dir="ltr" so the unit label's inline-end matches the LTR input's
@@ -121,7 +121,7 @@ export const QuantityInput = forwardRef<HTMLInputElement, QuantityInputProps>(
           aria-label={incrementLabel}
           disabled={disabled || (max !== undefined && value !== null && value >= max)}
           onClick={() => stepBy(step)}
-          className="h-10 shrink-0"
+          className="h-[var(--ctrl-h)] shrink-0"
           icon={<PlusIcon />}
         />
       </span>

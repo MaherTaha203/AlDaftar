@@ -14,9 +14,17 @@ export const metadata: Metadata = {
   title: 'Al Daftar',
 };
 
+// No-flash density init: apply the saved interface-density preset before the
+// first paint so a compact/spacious layout never flashes at comfortable first.
+// Static developer-authored script over a fixed localStorage key — no user data.
+const DENSITY_INIT = `try{var d=localStorage.getItem('aldaftar.density');if(d==='compact'||d==='spacious'||d==='comfortable')document.documentElement.dataset.density=d;}catch(e){}`;
+
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: DENSITY_INIT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

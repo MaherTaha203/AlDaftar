@@ -61,7 +61,7 @@ export const EntityPicker = forwardRef<HTMLSelectElement, EntityPickerProps>(fun
           aria-label={quickCreate.label}
           onClick={quickCreate.onCreate}
           disabled={props.disabled}
-          className="h-10 shrink-0"
+          className="h-[var(--ctrl-h)] shrink-0"
           icon={<PlusIcon />}
         />
       ) : null}

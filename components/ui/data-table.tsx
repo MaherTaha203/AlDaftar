@@ -172,8 +172,10 @@ export function DataTable<TRow>({
                 <td
                   key={column.key}
                   className={cn(
-                    // Generous, stable row height for long entry sessions.
-                    'h-12 px-md py-3 align-middle',
+                    // Generous, stable row height (density-aware) for long sessions.
+                    // Height comes from the density var; align-middle centers
+                    // content so density genuinely drives row height.
+                    'h-[var(--tbl-row-h)] px-md align-middle',
                     alignClasses[column.align ?? 'start'],
                     priorityClasses[column.priority ?? 1],
                   )}
@@ -183,7 +185,7 @@ export function DataTable<TRow>({
               ))}
               {rowActions ? (
                 <td
-                  className="h-12 px-md py-3 text-end align-middle"
+                  className="h-[var(--tbl-row-h)] px-md text-end align-middle"
                   onClick={(event) => event.stopPropagation()}
                 >
                   {rowActions(row)}

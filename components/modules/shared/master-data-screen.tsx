@@ -193,6 +193,7 @@ export function MasterDataScreen<T extends MasterRecord, TInput extends MasterIn
   return (
     <>
       <ListPage
+        onNew={openCreate}
         primaryAction={
           <Button icon={<PlusIcon />} onClick={openCreate}>
             {texts.createLabel}

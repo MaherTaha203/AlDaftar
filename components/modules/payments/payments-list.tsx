@@ -95,6 +95,7 @@ export function PaymentsList() {
 
   return (
     <ListPage
+      onNew={() => router.push('/payments/new')}
       primaryAction={
         <Link href="/payments/new">
           <Button icon={<PlusIcon />}>دفعة جديدة</Button>

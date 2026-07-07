@@ -99,6 +99,7 @@ export function ReturnsList() {
 
   return (
     <ListPage
+      onNew={() => router.push('/purchase-returns/new')}
       primaryAction={
         <Link href="/purchase-returns/new">
           <Button icon={<PlusIcon />}>مرتجع جديد</Button>
