@@ -99,7 +99,9 @@ export const QuantityInput = forwardRef<HTMLInputElement, QuantityInputProps>(
             className={cn(
               inputBaseClasses,
               'text-center tabular-nums',
-              invalid ? 'border-danger focus:outline-danger' : 'border-neutral-300',
+              invalid
+                ? 'border-danger focus:border-danger focus:shadow-[0_0_0_3px_rgba(194,69,47,0.16)]'
+                : 'border-neutral-300',
               unitLabel !== undefined && 'pe-xl',
               className,
             )}

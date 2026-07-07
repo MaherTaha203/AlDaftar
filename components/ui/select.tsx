@@ -34,7 +34,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           'h-10 w-full appearance-none rounded-md border bg-white ps-md pe-xl text-sm text-neutral-500',
           'transition-colors focus:outline-2 focus:outline-offset-1 focus:outline-primary',
           'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-70',
-          invalid ? 'border-danger focus:outline-danger' : 'border-neutral-300',
+          invalid
+            ? 'border-danger focus:border-danger focus:shadow-[0_0_0_3px_rgba(194,69,47,0.16)]'
+            : 'border-neutral-300',
         )}
       >
         {placeholder !== undefined ? (

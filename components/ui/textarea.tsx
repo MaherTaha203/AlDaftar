@@ -27,7 +27,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         'placeholder:text-neutral-400 transition-colors',
         'focus:outline-2 focus:outline-offset-1 focus:outline-primary',
         'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-70',
-        invalid ? 'border-danger focus:outline-danger' : 'border-neutral-300',
+        invalid
+          ? 'border-danger focus:border-danger focus:shadow-[0_0_0_3px_rgba(194,69,47,0.16)]'
+          : 'border-neutral-300',
         className,
       )}
     />

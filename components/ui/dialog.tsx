@@ -75,7 +75,10 @@ export function Dialog({
         }
       }}
       className={cn(
-        'm-auto rounded-lg bg-white p-0 text-inherit shadow-lg backdrop:bg-black/40',
+        // Dialogs are an approved glass moment: ink-tinted, softly blurred
+        // backdrop; the panel itself stays opaque for readability.
+        'm-auto rounded-lg bg-white p-0 text-inherit shadow-lg',
+        'backdrop:bg-[rgba(16,33,27,0.4)] backdrop:backdrop-blur-sm',
         sizeClasses[size],
       )}
     >

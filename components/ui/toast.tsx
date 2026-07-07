@@ -105,7 +105,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key={toast.id}
               role={toast.variant === 'error' ? 'alert' : 'status'}
               className={cn(
-                'pointer-events-auto flex items-start gap-sm rounded-md border bg-white p-md shadow-md',
+                'pointer-events-auto flex items-start gap-sm rounded-md border bg-white/90 p-md shadow-lg backdrop-blur-md',
                 style.className,
               )}
             >
