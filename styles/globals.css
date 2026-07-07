@@ -15,22 +15,24 @@
  */
 
 @theme {
-  /* Colors */
-  --color-primary: #0b5fff;
-  --color-secondary: #6b7280;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-500: #6b7280;
+  /* Colors — Royal Emerald (Design Sprint direction B) */
+  --color-primary: #0c6e5f;
+  --color-secondary: #5f6b66;
+  --color-success: #178a4c;
+  --color-warning: #a16207;
+  --color-danger: #c2452f;
+  --color-neutral-100: #f2f5f3;
+  --color-neutral-200: #e3e8e5;
+  --color-neutral-300: #cbd3cf;
+  --color-neutral-400: #93a09a;
+  --color-neutral-500: #5f6b66;
 
   /* Typography */
-  --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --font-sans:
+    'IBM Plex Sans Arabic', 'SF Arabic', 'Segoe UI', 'Noto Sans Arabic', 'Geeza Pro', Tahoma,
+    system-ui, sans-serif;
   --text-base: 16px;
-  --leading-base: 1.5;
+  --leading-base: 1.6;
 
   /* Spacing */
   --spacing-none: 0px;
@@ -48,9 +50,9 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 1px 2px rgba(16, 33, 27, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 33, 27, 0.08);
+  --shadow-lg: 0 12px 28px rgba(16, 33, 27, 0.14);
 
   /* Breakpoints */
   --breakpoint-sm: 640px;

@@ -17,7 +17,9 @@ function Svg({ children, ...props }: IconProps) {
       height={16}
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      // Lucide geometry at a refined 1.75 stroke — lighter, more premium at
+      // small display sizes while staying crisp (Royal Emerald icon system).
+      strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

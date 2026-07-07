@@ -48,6 +48,24 @@
     color: #000;
   }
 
+  /*
+   * Ink & Copper print philosophy (Design Sprint): printed documents are
+   * timeless, official, monochrome. Neutralize the on-screen Royal Emerald
+   * accent and mist neutrals to ink so no gradient/color leaks onto paper —
+   * the sheet reads as a professional financial document regardless of the
+   * screen theme. Hairlines become quiet ink-grey rules.
+   */
+  .print-sheet,
+  .print-sheet * {
+    color: #17181b !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  .print-sheet *:not(a) {
+    border-color: #b8bcc0 !important;
+  }
+
   /* Never split a table row, the totals block, or the signature strip (05 §1). */
   .print-avoid-break {
     break-inside: avoid;

@@ -31,8 +31,10 @@ export function StatCard({ label, value, icon, description, href, className }: S
     </>
   );
 
+  // Dashboard stat tiles are one of the few approved glass surfaces
+  // (Royal Emerald): translucent white over the mist ground, soft blur.
   const surface =
-    'flex flex-col gap-sm rounded-lg border border-neutral-200 bg-white p-lg shadow-sm';
+    'flex flex-col gap-sm rounded-lg border border-neutral-200/90 bg-white/80 p-lg shadow-sm backdrop-blur-md';
 
   if (href !== undefined) {
     return (
@@ -40,7 +42,8 @@ export function StatCard({ label, value, icon, description, href, className }: S
         href={href}
         className={cn(
           surface,
-          'transition-colors hover:border-primary/40 hover:shadow-md',
+          'transition-[border-color,box-shadow,transform] duration-200',
+          'hover:-translate-y-[3px] hover:border-primary/40 hover:shadow-md',
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
           className,
         )}

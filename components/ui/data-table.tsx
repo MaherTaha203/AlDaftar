@@ -54,7 +54,13 @@ export interface DataTableProps<TRow> {
   className?: string;
 }
 
-const alignClasses = { start: 'text-start', end: 'text-end', left: 'text-left tabular-nums' };
+const alignClasses = {
+  start: 'text-start',
+  end: 'text-end',
+  // Numeric columns: left-aligned tabular figures, slightly heavier so
+  // accounting values carry visual priority (Royal Emerald table language).
+  left: 'text-left tabular-nums font-medium text-neutral-500',
+};
 const priorityClasses = { 1: '', 2: 'max-lg:hidden', 3: 'max-md:hidden' };
 
 export function DataTable<TRow>({
@@ -94,7 +100,7 @@ export function DataTable<TRow>({
     >
       <table className="w-full border-collapse bg-white text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 bg-neutral-100">
+          <tr className="border-b border-neutral-200 bg-neutral-100/70">
             {columns.map((column) => {
               const sorted = sort?.key === column.key ? sort.direction : undefined;
               return (
@@ -106,23 +112,27 @@ export function DataTable<TRow>({
                     sorted === undefined ? undefined : sorted === 'asc' ? 'ascending' : 'descending'
                   }
                   className={cn(
-                    'px-md py-sm font-medium text-neutral-500',
+                    'px-md py-3 text-xs font-semibold tracking-[0.01em] text-neutral-400',
                     alignClasses[column.align ?? 'start'],
                     priorityClasses[column.priority ?? 1],
-                    sticky && 'sticky top-0 bg-neutral-100',
+                    sticky && 'sticky top-0 z-10 bg-neutral-100/95 backdrop-blur-sm',
                   )}
                 >
                   {column.sortable && onSortChange ? (
                     <button
                       type="button"
                       onClick={() => handleSortClick(column)}
-                      className="inline-flex items-center gap-xs rounded-sm hover:text-neutral-400 focus-visible:outline-2 focus-visible:outline-primary"
+                      className={cn(
+                        'inline-flex items-center gap-xs rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-primary',
+                        sorted !== undefined ? 'text-primary' : 'hover:text-neutral-500',
+                      )}
                     >
                       {column.header}
                       <ChevronDownIcon
                         width={12}
                         height={12}
                         className={cn(
+                          'transition-transform duration-200',
                           sorted === undefined && 'opacity-30',
                           sorted === 'asc' && 'rotate-180',
                         )}
@@ -154,15 +164,16 @@ export function DataTable<TRow>({
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
-                'border-b border-neutral-100 last:border-b-0',
-                onRowClick && 'cursor-pointer transition-colors hover:bg-neutral-100',
+                'border-b border-neutral-200/60 last:border-b-0 transition-colors duration-150',
+                onRowClick && 'cursor-pointer hover:bg-primary/[0.05]',
               )}
             >
               {columns.map((column) => (
                 <td
                   key={column.key}
                   className={cn(
-                    'px-md py-sm',
+                    // Generous, stable row height for long entry sessions.
+                    'h-12 px-md py-3 align-middle',
                     alignClasses[column.align ?? 'start'],
                     priorityClasses[column.priority ?? 1],
                   )}
@@ -171,7 +182,10 @@ export function DataTable<TRow>({
                 </td>
               ))}
               {rowActions ? (
-                <td className="px-md py-sm text-end" onClick={(event) => event.stopPropagation()}>
+                <td
+                  className="h-12 px-md py-3 text-end align-middle"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   {rowActions(row)}
                 </td>
               ) : null}

@@ -26,7 +26,7 @@ export function Header({ title, search, actions, onMenuClick, className }: Heade
   return (
     <header
       className={cn(
-        'flex h-14 items-center gap-md border-b border-neutral-200 bg-white px-md',
+        'flex h-14 items-center gap-md border-b border-neutral-200 bg-white/85 px-md backdrop-blur-md',
         className,
       )}
     >
