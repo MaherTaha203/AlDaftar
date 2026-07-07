@@ -20,3 +20,5 @@ export { DensityControl } from './density-control';
 export { recentRow } from './recent-row-store';
 export { useShortcut } from './use-shortcut';
 export { type ShortcutAction } from './shortcut-registry';
+export { focusMode } from './focus-store';
+export { FocusToggle } from './focus-toggle';

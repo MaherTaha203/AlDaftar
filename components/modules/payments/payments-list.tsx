@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getPaymentService, PaymentStatus, type Payment } from '@/lib/modules/payments';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
+import { SupplierReference } from '../suppliers/supplier-preview';
 import { ListPage, useOperation } from '../../framework';
 import {
   Button,
@@ -13,11 +14,14 @@ import {
   EyeIcon,
   FilterPanel,
   MoneyDisplay,
+  PanelIcon,
+  PeekField,
   PencilIcon,
   PlusIcon,
   PrinterIcon,
   RowActions,
   Select,
+  SideDetailPanel,
   formatDate,
   type DataTableColumn,
   type RowAction,
@@ -39,6 +43,7 @@ export function PaymentsList() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [peek, setPeek] = useState<Payment | null>(null);
 
   const { run: load, pending, error } = useOperation(() => getPaymentService().list());
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
@@ -49,6 +54,7 @@ export function PaymentsList() {
   }, [load, loadSuppliers]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+  const supplierById = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), [suppliers]);
 
   const columns = useMemo<readonly DataTableColumn<Payment>[]>(
     () => [
@@ -65,7 +71,7 @@ export function PaymentsList() {
       {
         key: 'supplier',
         header: 'المورد',
-        render: (row) => supplierName.get(row.supplierId) ?? '—',
+        render: (row) => <SupplierReference supplier={supplierById.get(row.supplierId)} />,
       },
       { key: 'method', header: 'الطريقة', priority: 2, render: (row) => row.method || '—' },
       {
@@ -76,7 +82,7 @@ export function PaymentsList() {
       },
       { key: 'status', header: 'الحالة', render: (row) => <DocumentStatus state={row.status} /> },
     ],
-    [supplierName],
+    [supplierById],
   );
 
   const filtered = useMemo(() => {
@@ -99,106 +105,162 @@ export function PaymentsList() {
   const isFiltered = query.trim() !== '' || statusFilter !== 'all';
 
   return (
-    <ListPage
-      onNew={() => router.push('/payments/new')}
-      primaryAction={
-        <Link href="/payments/new">
-          <Button icon={<PlusIcon />}>دفعة جديدة</Button>
-        </Link>
-      }
-      search={{
-        placeholder: 'بحث بالرقم أو المورد أو المرجع…',
-        onQueryChange: (value) => {
-          setQuery(value);
-          setPage(1);
-        },
-      }}
-      toolbarActions={
-        <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
-          تصفية
-        </Button>
-      }
-      filters={
-        <FilterPanel
-          open={filtersOpen}
-          chips={
-            statusFilter === 'all'
-              ? []
-              : [
-                  {
-                    key: 'status',
-                    label: `الحالة: ${statusFilter === PaymentStatus.Draft ? 'مسودة' : 'مرحّل'}`,
-                  },
-                ]
-          }
-          onRemoveChip={() => {
-            setStatusFilter('all');
-            setPage(1);
-          }}
-        >
-          <label className="flex items-center gap-sm text-sm text-neutral-500">
-            الحالة
-            <Select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as StatusFilter);
-                setPage(1);
-              }}
-              className="w-36"
-            >
-              <option value="all">الكل</option>
-              <option value={PaymentStatus.Draft}>مسودة</option>
-              <option value={PaymentStatus.Posted}>مرحّل</option>
-            </Select>
-          </label>
-        </FilterPanel>
-      }
-      columns={columns}
-      rows={pageRows}
-      rowKey={(row) => row.id}
-      onRowClick={(row) =>
-        router.push(
-          row.status === PaymentStatus.Draft ? `/payments/${row.id}/edit` : `/payments/${row.id}`,
-        )
-      }
-      rowActions={(row) => {
-        const isDraft = row.status === PaymentStatus.Draft;
-        const actions: RowAction[] = [
-          {
-            key: 'view',
-            label: 'عرض',
-            icon: <EyeIcon />,
-            onSelect: () => router.push(`/payments/${row.id}`),
-          },
-        ];
-        if (isDraft) {
-          actions.push({
-            key: 'edit',
-            label: 'تعديل',
-            icon: <PencilIcon />,
-            onSelect: () => router.push(`/payments/${row.id}/edit`),
-          });
-        }
-        actions.push({
-          key: 'print',
-          label: 'طباعة',
-          icon: <PrinterIcon />,
-          onSelect: () => router.push(`/payments/${row.id}/print`),
-        });
-        return <RowActions actions={actions} />;
-      }}
-      loading={pending && payments.length === 0}
-      error={error}
-      onRetry={() => void load().then((r) => r.ok && setPayments(r.value))}
-      emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مدفوعات بعد'}
-      emptyAction={
-        isFiltered ? undefined : (
+    <>
+      <ListPage
+        onNew={() => router.push('/payments/new')}
+        primaryAction={
           <Link href="/payments/new">
-            <Button variant="secondary">دفعة جديدة</Button>
+            <Button icon={<PlusIcon />}>دفعة جديدة</Button>
           </Link>
-        )
-      }
-      pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
-    />
+        }
+        search={{
+          placeholder: 'بحث بالرقم أو المورد أو المرجع…',
+          onQueryChange: (value) => {
+            setQuery(value);
+            setPage(1);
+          },
+        }}
+        toolbarActions={
+          <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((o) => !o)}>
+            تصفية
+          </Button>
+        }
+        filters={
+          <FilterPanel
+            open={filtersOpen}
+            chips={
+              statusFilter === 'all'
+                ? []
+                : [
+                    {
+                      key: 'status',
+                      label: `الحالة: ${statusFilter === PaymentStatus.Draft ? 'مسودة' : 'مرحّل'}`,
+                    },
+                  ]
+            }
+            onRemoveChip={() => {
+              setStatusFilter('all');
+              setPage(1);
+            }}
+          >
+            <label className="flex items-center gap-sm text-sm text-neutral-500">
+              الحالة
+              <Select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="w-36"
+              >
+                <option value="all">الكل</option>
+                <option value={PaymentStatus.Draft}>مسودة</option>
+                <option value={PaymentStatus.Posted}>مرحّل</option>
+              </Select>
+            </label>
+          </FilterPanel>
+        }
+        columns={columns}
+        rows={pageRows}
+        rowKey={(row) => row.id}
+        onRowClick={(row) =>
+          router.push(
+            row.status === PaymentStatus.Draft ? `/payments/${row.id}/edit` : `/payments/${row.id}`,
+          )
+        }
+        rowActions={(row) => {
+          const isDraft = row.status === PaymentStatus.Draft;
+          const actions: RowAction[] = [
+            {
+              key: 'peek',
+              label: 'معاينة',
+              icon: <PanelIcon />,
+              onSelect: () => setPeek(row),
+            },
+            {
+              key: 'view',
+              label: 'عرض',
+              icon: <EyeIcon />,
+              onSelect: () => router.push(`/payments/${row.id}`),
+            },
+          ];
+          if (isDraft) {
+            actions.push({
+              key: 'edit',
+              label: 'تعديل',
+              icon: <PencilIcon />,
+              onSelect: () => router.push(`/payments/${row.id}/edit`),
+            });
+          }
+          actions.push({
+            key: 'print',
+            label: 'طباعة',
+            icon: <PrinterIcon />,
+            onSelect: () => router.push(`/payments/${row.id}/print`),
+          });
+          return <RowActions actions={actions} />;
+        }}
+        loading={pending && payments.length === 0}
+        error={error}
+        onRetry={() => void load().then((r) => r.ok && setPayments(r.value))}
+        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد مدفوعات بعد'}
+        emptyAction={
+          isFiltered ? undefined : (
+            <Link href="/payments/new">
+              <Button variant="secondary">دفعة جديدة</Button>
+            </Link>
+          )
+        }
+        pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }}
+      />
+
+      <SideDetailPanel
+        open={peek !== null}
+        onClose={() => setPeek(null)}
+        title={peek?.number === null ? 'مسودة دفعة' : `سند دفع رقم ${peek?.number}`}
+        subtitle={peek ? <DocumentStatus state={peek.status} /> : undefined}
+        onOpenFullPage={
+          peek
+            ? () => {
+                const target = peek;
+                setPeek(null);
+                router.push(
+                  target.status === PaymentStatus.Draft
+                    ? `/payments/${target.id}/edit`
+                    : `/payments/${target.id}`,
+                );
+              }
+            : undefined
+        }
+      >
+        {peek ? (
+          <dl>
+            <PeekField label="المورد">{supplierName.get(peek.supplierId) ?? '—'}</PeekField>
+            <PeekField label="التاريخ">
+              <bdi dir="ltr">{formatDate(peek.date)}</bdi>
+            </PeekField>
+            <PeekField label="طريقة الدفع">
+              {peek.method || '—'}
+              {peek.reference !== '' ? (
+                <>
+                  {' · '}
+                  <bdi dir="ltr">{peek.reference}</bdi>
+                </>
+              ) : null}
+            </PeekField>
+            <PeekField label="المبلغ المدفوع">
+              <span className="font-semibold">
+                <MoneyDisplay value={peek.amount} currencyLabel={BOOK_CURRENCY.symbol} />
+              </span>
+            </PeekField>
+            {peek.discount > 0 ? (
+              <PeekField label="خصم عند الدفع">
+                <MoneyDisplay value={peek.discount} currencyLabel={BOOK_CURRENCY.symbol} />
+              </PeekField>
+            ) : null}
+          </dl>
+        ) : null}
+      </SideDetailPanel>
+    </>
   );
 }

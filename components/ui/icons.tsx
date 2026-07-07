@@ -275,3 +275,24 @@ export function MoreVerticalIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function PanelIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <line x1="9" y1="3" x2="9" y2="21" />
+    </Svg>
+  );
+}
+
+export function FocusIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <circle cx="12" cy="12" r="3" />
+    </Svg>
+  );
+}

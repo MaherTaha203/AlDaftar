@@ -7,6 +7,7 @@ import { AuditAction, getAuditService } from '@/lib/modules/audit';
 import { AppShell } from '../layout';
 import { Button, uiText } from '../ui';
 import { APP_BRAND, navigationGroups } from './navigation';
+import { FocusToggle } from './focus-toggle';
 import { ProductivityBar } from './productivity-bar';
 
 /**
@@ -49,7 +50,10 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
         title: <span className="sr-only">{APP_BRAND}</span>,
         actions: (
           <>
-            <ProductivityBar />
+            <span className="app-focus-collapsible contents">
+              <ProductivityBar />
+            </span>
+            <FocusToggle />
             <Button variant="ghost" size="sm" loading={signingOut} onClick={() => void onLogout()}>
               {uiText.auth.logout}
             </Button>

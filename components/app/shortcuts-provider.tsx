@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Dialog, Input, cn } from '../ui';
 import { calculatorWindow } from './calculator-store';
+import { focusMode } from './focus-store';
 import { navigationGroups } from './navigation';
 import { shortcutRegistry, type ShortcutAction } from './shortcut-registry';
 
@@ -41,6 +42,7 @@ const GUIDE: readonly { keys: string; label: string }[] = [
   { keys: 'Ctrl + P', label: 'طباعة المستند' },
   { keys: 'Ctrl + F', label: 'البحث داخل الصفحة' },
   { keys: 'Alt + C', label: 'الآلة الحاسبة' },
+  { keys: 'Alt + F', label: 'وضع التركيز' },
   { keys: 'F2', label: 'تعديل السجل الحالي' },
   { keys: 'Delete', label: 'حذف السجل الحالي (بتأكيد)' },
   { keys: 'Esc', label: 'إغلاق النافذة' },
@@ -72,6 +74,11 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
       // Always-available globals.
       if (event.altKey && (event.key === 'c' || event.key === 'C')) {
         calculatorWindow.toggleOpen();
+        event.preventDefault();
+        return;
+      }
+      if (event.altKey && (event.key === 'f' || event.key === 'F')) {
+        focusMode.toggle();
         event.preventDefault();
         return;
       }

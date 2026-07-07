@@ -9,10 +9,13 @@ import {
   Button,
   EyeIcon,
   FilterPanel,
+  PanelIcon,
+  PeekField,
   PencilIcon,
   PlusIcon,
   RowActions,
   Select,
+  SideDetailPanel,
   StatusBadge,
   type DataTableColumn,
 } from '../../ui';
@@ -58,6 +61,7 @@ export function SuppliersList() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [peek, setPeek] = useState<Supplier | null>(null);
 
   const { run: load, pending, error } = useOperation(() => getSupplierService().list());
 
@@ -82,95 +86,138 @@ export function SuppliersList() {
   const isFiltered = query.trim() !== '' || statusFilter !== 'all';
 
   return (
-    <ListPage
-      primaryAction={
-        <Link href="/suppliers/new">
-          <Button icon={<PlusIcon />}>مورد جديد</Button>
-        </Link>
-      }
-      search={{
-        placeholder: 'بحث بالاسم أو الهاتف…',
-        onQueryChange: (value) => {
-          setQuery(value);
-          setPage(1);
-        },
-      }}
-      toolbarActions={
-        <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((open) => !open)}>
-          تصفية
-        </Button>
-      }
-      filters={
-        <FilterPanel
-          open={filtersOpen}
-          chips={
-            statusFilter === 'all'
-              ? []
-              : [{ key: 'status', label: `الحالة: ${statusLabels[statusFilter]}` }]
-          }
-          onRemoveChip={() => {
-            setStatusFilter('all');
-            setPage(1);
-          }}
-        >
-          <label className="flex items-center gap-sm text-sm text-neutral-500">
-            الحالة
-            <Select
-              value={statusFilter}
-              onChange={(event) => {
-                setStatusFilter(event.target.value as StatusFilter);
-                setPage(1);
-              }}
-              className="w-40"
-            >
-              <option value="all">الكل</option>
-              <option value={SupplierStatus.Active}>{statusLabels[SupplierStatus.Active]}</option>
-              <option value={SupplierStatus.Archived}>
-                {statusLabels[SupplierStatus.Archived]}
-              </option>
-            </Select>
-          </label>
-        </FilterPanel>
-      }
-      columns={columns}
-      rows={pageRows}
-      rowKey={(row) => row.id}
-      onRowClick={(row) => router.push(`/suppliers/${row.id}`)}
-      rowActions={(row) => (
-        <RowActions
-          actions={[
-            {
-              key: 'view',
-              label: 'عرض',
-              icon: <EyeIcon />,
-              onSelect: () => router.push(`/suppliers/${row.id}`),
-            },
-            {
-              key: 'edit',
-              label: 'تعديل',
-              icon: <PencilIcon />,
-              onSelect: () => router.push(`/suppliers/${row.id}/edit`),
-            },
-          ]}
-        />
-      )}
-      loading={pending && suppliers.length === 0}
-      error={error}
-      onRetry={() => void load()}
-      emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا يوجد موردون بعد'}
-      emptyAction={
-        isFiltered ? undefined : (
+    <>
+      <ListPage
+        primaryAction={
           <Link href="/suppliers/new">
-            <Button variant="secondary">مورد جديد</Button>
+            <Button icon={<PlusIcon />}>مورد جديد</Button>
           </Link>
-        )
-      }
-      pagination={{
-        page,
-        pageSize: PAGE_SIZE,
-        total: filtered.length,
-        onPageChange: setPage,
-      }}
-    />
+        }
+        search={{
+          placeholder: 'بحث بالاسم أو الهاتف…',
+          onQueryChange: (value) => {
+            setQuery(value);
+            setPage(1);
+          },
+        }}
+        toolbarActions={
+          <Button variant="secondary" size="sm" onClick={() => setFiltersOpen((open) => !open)}>
+            تصفية
+          </Button>
+        }
+        filters={
+          <FilterPanel
+            open={filtersOpen}
+            chips={
+              statusFilter === 'all'
+                ? []
+                : [{ key: 'status', label: `الحالة: ${statusLabels[statusFilter]}` }]
+            }
+            onRemoveChip={() => {
+              setStatusFilter('all');
+              setPage(1);
+            }}
+          >
+            <label className="flex items-center gap-sm text-sm text-neutral-500">
+              الحالة
+              <Select
+                value={statusFilter}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="w-40"
+              >
+                <option value="all">الكل</option>
+                <option value={SupplierStatus.Active}>{statusLabels[SupplierStatus.Active]}</option>
+                <option value={SupplierStatus.Archived}>
+                  {statusLabels[SupplierStatus.Archived]}
+                </option>
+              </Select>
+            </label>
+          </FilterPanel>
+        }
+        columns={columns}
+        rows={pageRows}
+        rowKey={(row) => row.id}
+        onRowClick={(row) => router.push(`/suppliers/${row.id}`)}
+        rowActions={(row) => (
+          <RowActions
+            actions={[
+              {
+                key: 'peek',
+                label: 'معاينة',
+                icon: <PanelIcon />,
+                onSelect: () => setPeek(row),
+              },
+              {
+                key: 'view',
+                label: 'عرض',
+                icon: <EyeIcon />,
+                onSelect: () => router.push(`/suppliers/${row.id}`),
+              },
+              {
+                key: 'edit',
+                label: 'تعديل',
+                icon: <PencilIcon />,
+                onSelect: () => router.push(`/suppliers/${row.id}/edit`),
+              },
+            ]}
+          />
+        )}
+        loading={pending && suppliers.length === 0}
+        error={error}
+        onRetry={() => void load()}
+        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا يوجد موردون بعد'}
+        emptyAction={
+          isFiltered ? undefined : (
+            <Link href="/suppliers/new">
+              <Button variant="secondary">مورد جديد</Button>
+            </Link>
+          )
+        }
+        pagination={{
+          page,
+          pageSize: PAGE_SIZE,
+          total: filtered.length,
+          onPageChange: setPage,
+        }}
+      />
+
+      <SideDetailPanel
+        open={peek !== null}
+        onClose={() => setPeek(null)}
+        title={peek?.name ?? ''}
+        subtitle={
+          peek ? (
+            <StatusBadge tone={peek.status === SupplierStatus.Active ? 'success' : 'neutral'}>
+              {statusLabels[peek.status]}
+            </StatusBadge>
+          ) : undefined
+        }
+        onOpenFullPage={
+          peek
+            ? () => {
+                const id = peek.id;
+                setPeek(null);
+                router.push(`/suppliers/${id}`);
+              }
+            : undefined
+        }
+      >
+        {peek ? (
+          <dl>
+            <PeekField label="الهاتف">
+              {peek.phone === '' ? '—' : <bdi dir="ltr">{peek.phone}</bdi>}
+            </PeekField>
+            <PeekField label="العنوان">{peek.address === '' ? '—' : peek.address}</PeekField>
+            <PeekField label="الرقم الضريبي / السجل">
+              {peek.taxReference === '' ? '—' : <bdi dir="ltr">{peek.taxReference}</bdi>}
+            </PeekField>
+            <PeekField label="ملاحظات">{peek.notes === '' ? '—' : peek.notes}</PeekField>
+          </dl>
+        ) : null}
+      </SideDetailPanel>
+    </>
   );
 }

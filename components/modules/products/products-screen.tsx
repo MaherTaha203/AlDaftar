@@ -18,10 +18,13 @@ import {
   Field,
   InboxIcon,
   Input,
+  PanelIcon,
+  PeekField,
   PencilIcon,
   PlusIcon,
   RotateIcon,
   RowActions,
+  SideDetailPanel,
   StatusBadge,
   Textarea,
   useToast,
@@ -54,6 +57,7 @@ export function ProductsScreen() {
   const [unitId, setUnitId] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<{ name?: string; unit?: string }>({});
   const [confirmTarget, setConfirmTarget] = useState<Product | null>(null);
+  const [peek, setPeek] = useState<Product | null>(null);
 
   const { run: loadAll, pending, error } = useOperation(() => getProductService().list());
   const save = useOperation((input: ProductInput, id?: string) =>
@@ -199,6 +203,12 @@ export function ProductsScreen() {
             <RowActions
               actions={[
                 {
+                  key: 'peek',
+                  label: 'معاينة',
+                  icon: <PanelIcon />,
+                  onSelect: () => setPeek(row),
+                },
+                {
                   key: 'edit',
                   label: 'تعديل',
                   icon: <PencilIcon />,
@@ -301,6 +311,40 @@ export function ProductsScreen() {
           ? `سيُخفى «${confirmTarget.name}» من قوائم الاختيار ولن يُحذف أي سجل.`
           : `سيعود «${confirmTarget?.name ?? ''}» للظهور في قوائم الاختيار.`}
       </ConfirmDialog>
+
+      <SideDetailPanel
+        open={peek !== null}
+        onClose={() => setPeek(null)}
+        title={peek?.name ?? ''}
+        subtitle={
+          peek ? (
+            <StatusBadge tone={peek.status === ProductStatus.Active ? 'success' : 'neutral'}>
+              {peek.status === ProductStatus.Active ? 'نشط' : 'مؤرشف'}
+            </StatusBadge>
+          ) : undefined
+        }
+        fullPageLabel="تعديل المنتج"
+        onOpenFullPage={
+          peek
+            ? () => {
+                const target = peek;
+                setPeek(null);
+                openDialog(target);
+              }
+            : undefined
+        }
+      >
+        {peek ? (
+          <dl>
+            <PeekField label="الكود">
+              {peek.code === '' ? '—' : <bdi dir="ltr">{peek.code}</bdi>}
+            </PeekField>
+            <PeekField label="التصنيف">{categoryName.get(peek.categoryId) ?? '—'}</PeekField>
+            <PeekField label="الوحدة">{unitName.get(peek.unitId) ?? '—'}</PeekField>
+            <PeekField label="ملاحظات">{peek.notes === '' ? '—' : peek.notes}</PeekField>
+          </dl>
+        ) : null}
+      </SideDetailPanel>
     </>
   );
 }
