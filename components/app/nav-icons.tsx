@@ -16,7 +16,8 @@ function Svg({ children, ...props }: NavIconProps) {
       height={18}
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      // Matches components/ui/icons.tsx — one stroke weight across the app.
+      strokeWidth={1.75}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
