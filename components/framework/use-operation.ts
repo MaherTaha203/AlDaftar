@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { AsyncResult } from '@/lib/core';
+import { systemStatus } from '@/components/app/system-status-store';
 import { getErrorMessage } from './error-messages';
 
 /**
@@ -35,7 +36,11 @@ export function useOperation<TArgs extends readonly unknown[], TValue>(
   const run = useCallback(async (...args: TArgs) => {
     const seq = ++callSeq.current;
     setState({ pending: true, error: null });
+    // Feed the global activity signal (top-bar status indicator). begin/settle
+    // are always paired, even on the stale-call path, so the counter balances.
+    systemStatus.begin();
     const result = await operationRef.current(...args);
+    systemStatus.settle(result.ok ? null : result.error);
     if (seq === callSeq.current) {
       setState({ pending: false, error: result.ok ? null : getErrorMessage(result.error) });
     }
