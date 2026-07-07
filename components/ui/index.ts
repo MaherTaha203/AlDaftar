@@ -24,7 +24,15 @@ export { Pagination, type PaginationProps } from './pagination';
 export { Dialog, type DialogProps, type DialogSize } from './dialog';
 export { ConfirmDialog, type ConfirmDialogProps } from './confirm-dialog';
 export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from './toast';
-export { Skeleton, TableSkeleton, type SkeletonProps, type TableSkeletonProps } from './skeleton';
+export {
+  Skeleton,
+  TableSkeleton,
+  CardSkeleton,
+  StatGridSkeleton,
+  FormSkeleton,
+  type SkeletonProps,
+  type TableSkeletonProps,
+} from './skeleton';
 export { EmptyState, type EmptyStateProps } from './empty-state';
 export { ErrorState, type ErrorStateProps } from './error-state';
 export {

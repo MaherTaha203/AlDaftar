@@ -31,7 +31,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         aria-invalid={invalid || undefined}
         {...props}
         className={cn(
-          'h-10 w-full appearance-none rounded-md border bg-white ps-md pe-xl text-sm text-neutral-500',
+          'h-[var(--ctrl-h)] w-full appearance-none rounded-md border bg-white ps-md pe-xl text-sm text-neutral-500',
           'transition-colors focus:outline-2 focus:outline-offset-1 focus:outline-primary',
           'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-70',
           invalid

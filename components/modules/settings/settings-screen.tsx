@@ -7,9 +7,9 @@ import {
   type CompanyProfile,
 } from '@/lib/modules/settings';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
-import { PageLayout } from '@/components/app';
+import { DensityControl, PageLayout } from '@/components/app';
 import { useOperation } from '@/components/framework';
-import { Button, Field, Input, Spinner } from '@/components/ui';
+import { Button, Field, FormSkeleton, Input } from '@/components/ui';
 
 /**
  * SettingsScreen — screen S-70 (01_System_Workflow.md §7). v1 delivers the
@@ -93,9 +93,7 @@ export function SettingsScreen() {
   if (!loaded) {
     return (
       <PageLayout title="الإعدادات">
-        <div className="flex justify-center py-2xl">
-          <Spinner />
-        </div>
+        <FormSkeleton fields={5} />
       </PageLayout>
     );
   }
@@ -181,6 +179,18 @@ export function SettingsScreen() {
           <p className="text-xs text-neutral-400">
             قرارات معتمدة (BDD-005 / BDR-17 / BDR-18) — ثابتة في هذه النسخة.
           </p>
+        </Section>
+
+        <Section title="تفضيلات العرض">
+          <div className="flex flex-wrap items-center justify-between gap-md">
+            <div className="flex flex-col gap-xs">
+              <span className="text-sm font-medium text-neutral-700">كثافة الواجهة</span>
+              <span className="text-xs text-neutral-400">
+                يضبط المسافات وارتفاع صفوف الجداول وحجم عناصر الإدخال — يُحفظ لكل جهاز.
+              </span>
+            </div>
+            <DensityControl />
+          </div>
         </Section>
 
         <Section title="المرفقات والنسخ الاحتياطي">

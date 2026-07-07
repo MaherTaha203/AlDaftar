@@ -15,7 +15,7 @@ import {
   Input,
   MoneyDisplay,
   Select,
-  Spinner,
+  TableSkeleton,
   formatDate,
 } from '@/components/ui';
 import { findReport } from './report-registry';
@@ -285,9 +285,7 @@ export function ReportView({ reportId }: { reportId: string }) {
           ) : null}
 
           {pending && !snapshot ? (
-            <div className="flex justify-center py-2xl">
-              <Spinner />
-            </div>
+            <TableSkeleton />
           ) : error ? (
             <ErrorState
               message={error ?? 'تعذّر تحميل التقرير'}

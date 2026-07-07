@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { ToastProvider } from '../ui';
 import { AuditFailureNotifier } from './audit-failure-notifier';
 import { Calculator } from './calculator';
+import { ShortcutsProvider } from './shortcuts-provider';
 import { SingleTabGuard } from './single-tab-guard';
 import './persistence-bootstrap';
 
@@ -22,7 +23,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ToastProvider>
       <AuditFailureNotifier />
-      <SingleTabGuard>{children}</SingleTabGuard>
+      <SingleTabGuard>
+        <ShortcutsProvider>{children}</ShortcutsProvider>
+      </SingleTabGuard>
       {/* Mounted above the router so the floating calculator survives
           navigation and stays non-modal over any page. */}
       <Calculator />

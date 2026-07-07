@@ -150,6 +150,7 @@ export function PurchasesList() {
 
   return (
     <ListPage
+      onNew={() => router.push('/purchases/new')}
       primaryAction={
         <Link href="/purchases/new">
           <Button icon={<PlusIcon />}>شراء جديد</Button>

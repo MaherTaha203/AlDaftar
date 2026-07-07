@@ -19,7 +19,7 @@ import {
   ErrorState,
   formatDate,
   MoneyDisplay,
-  Spinner,
+  StatGridSkeleton,
   StatCard,
   Button,
 } from '@/components/ui';
@@ -126,9 +126,7 @@ export function DashboardScreen() {
   return (
     <PageLayout title="لوحة التحكم">
       {pending && !snapshot ? (
-        <div className="flex justify-center py-2xl">
-          <Spinner />
-        </div>
+        <StatGridSkeleton tiles={5} />
       ) : error ? (
         <ErrorState
           message={error ?? 'تعذّر تحميل لوحة التحكم'}

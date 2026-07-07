@@ -16,3 +16,4 @@ export {
 } from './routes';
 export { buildBreadcrumbs, type BuildBreadcrumbsOptions } from './breadcrumbs';
 export { PageLayout, type PageLayoutProps } from './page-layout';
+export { DensityControl } from './density-control';

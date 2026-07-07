@@ -54,7 +54,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  md: 'h-10 px-md text-sm gap-sm',
+  md: 'h-[var(--ctrl-h)] px-md text-sm gap-sm',
   sm: 'h-8 px-sm text-sm gap-xs',
 };
 

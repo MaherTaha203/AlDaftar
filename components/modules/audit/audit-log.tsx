@@ -18,7 +18,7 @@ import {
   ErrorState,
   formatDateTime,
   Select,
-  Spinner,
+  TableSkeleton,
 } from '@/components/ui';
 
 /**
@@ -108,9 +108,7 @@ export function AuditLog() {
       </div>
 
       {pending && entries.length === 0 ? (
-        <div className="flex justify-center py-2xl">
-          <Spinner />
-        </div>
+        <TableSkeleton />
       ) : error ? (
         <ErrorState
           message={error ?? 'تعذّر تحميل السجل'}
