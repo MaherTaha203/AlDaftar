@@ -17,3 +17,6 @@ export {
 export { buildBreadcrumbs, type BuildBreadcrumbsOptions } from './breadcrumbs';
 export { PageLayout, type PageLayoutProps } from './page-layout';
 export { DensityControl } from './density-control';
+export { recentRow } from './recent-row-store';
+export { useShortcut } from './use-shortcut';
+export { type ShortcutAction } from './shortcut-registry';

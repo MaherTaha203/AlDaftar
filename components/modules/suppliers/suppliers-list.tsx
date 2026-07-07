@@ -5,7 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { getSupplierService, SupplierStatus, type Supplier } from '@/lib/modules/suppliers';
 import { ListPage, useOperation } from '../../framework';
-import { Button, FilterPanel, PlusIcon, Select, StatusBadge, type DataTableColumn } from '../../ui';
+import {
+  Button,
+  EyeIcon,
+  FilterPanel,
+  PencilIcon,
+  PlusIcon,
+  RowActions,
+  Select,
+  StatusBadge,
+  type DataTableColumn,
+} from '../../ui';
 
 /**
  * SuppliersList — screen S-10 (02_Screen_Flow.md). A ListPage instance over
@@ -126,6 +136,24 @@ export function SuppliersList() {
       rows={pageRows}
       rowKey={(row) => row.id}
       onRowClick={(row) => router.push(`/suppliers/${row.id}`)}
+      rowActions={(row) => (
+        <RowActions
+          actions={[
+            {
+              key: 'view',
+              label: 'عرض',
+              icon: <EyeIcon />,
+              onSelect: () => router.push(`/suppliers/${row.id}`),
+            },
+            {
+              key: 'edit',
+              label: 'تعديل',
+              icon: <PencilIcon />,
+              onSelect: () => router.push(`/suppliers/${row.id}/edit`),
+            },
+          ]}
+        />
+      )}
       loading={pending && suppliers.length === 0}
       error={error}
       onRetry={() => void load()}

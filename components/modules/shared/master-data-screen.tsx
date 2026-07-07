@@ -7,14 +7,19 @@ import {
   type MasterInput,
   type MasterRecord,
 } from '@/lib/modules/shared/master-data';
+import { recentRow } from '../../app';
 import { ListPage, useOperation } from '../../framework';
 import {
   Button,
   ConfirmDialog,
   EntryDialog,
   Field,
+  InboxIcon,
   Input,
+  PencilIcon,
   PlusIcon,
+  RotateIcon,
+  RowActions,
   StatusBadge,
   Textarea,
   useToast,
@@ -145,6 +150,7 @@ export function MasterDataScreen<T extends MasterRecord, TInput extends MasterIn
         message: dialog?.mode === 'edit' ? 'تم حفظ التعديلات' : 'تمت الإضافة',
       });
       await reload();
+      recentRow.mark(result.value.id);
     }
   }
 
@@ -153,6 +159,7 @@ export function MasterDataScreen<T extends MasterRecord, TInput extends MasterIn
       return;
     }
     const archiving = confirmTarget.status === MasterStatus.Active;
+    const toggledId = confirmTarget.id;
     const result = await toggle.run(confirmTarget.id, archiving);
     setConfirmTarget(null);
     if (result.ok) {
@@ -161,6 +168,7 @@ export function MasterDataScreen<T extends MasterRecord, TInput extends MasterIn
         message: archiving ? 'تمت الأرشفة' : 'تمت إعادة التنشيط',
       });
       await reload();
+      recentRow.mark(toggledId);
     } else {
       toast.show({ variant: 'error', message: toggle.error ?? 'تعذر تنفيذ العملية' });
     }
@@ -210,16 +218,28 @@ export function MasterDataScreen<T extends MasterRecord, TInput extends MasterIn
         rows={pageRows}
         rowKey={(row) => row.id}
         onRowClick={openEdit}
-        rowActions={(row) => (
-          <span className="flex items-center gap-xs">
-            <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-              تعديل
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmTarget(row)}>
-              {row.status === MasterStatus.Active ? 'أرشفة' : 'تنشيط'}
-            </Button>
-          </span>
-        )}
+        rowActions={(row) => {
+          const active = row.status === MasterStatus.Active;
+          return (
+            <RowActions
+              actions={[
+                {
+                  key: 'edit',
+                  label: 'تعديل',
+                  icon: <PencilIcon />,
+                  onSelect: () => openEdit(row),
+                },
+                {
+                  key: 'toggle',
+                  label: active ? 'أرشفة' : 'إعادة تنشيط',
+                  icon: active ? <InboxIcon /> : <RotateIcon />,
+                  onSelect: () => setConfirmTarget(row),
+                  danger: active,
+                },
+              ]}
+            />
+          );
+        }}
         loading={loading && records.length === 0}
         error={loadError}
         onRetry={() => void reload()}

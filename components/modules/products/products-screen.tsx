@@ -9,14 +9,19 @@ import {
   type ProductInput,
 } from '@/lib/modules/products';
 import { getUnitService, type Unit } from '@/lib/modules/units';
+import { recentRow } from '../../app';
 import { EntityPicker, ListPage, useOperation } from '../../framework';
 import {
   Button,
   ConfirmDialog,
   EntryDialog,
   Field,
+  InboxIcon,
   Input,
+  PencilIcon,
   PlusIcon,
+  RotateIcon,
+  RowActions,
   StatusBadge,
   Textarea,
   useToast,
@@ -148,6 +153,7 @@ export function ProductsScreen() {
         message: dialog?.mode === 'edit' ? 'تم حفظ التعديلات' : 'تمت إضافة المنتج',
       });
       await reload();
+      recentRow.mark(result.value.id);
     }
   }
 
@@ -156,11 +162,13 @@ export function ProductsScreen() {
       return;
     }
     const archiving = confirmTarget.status === ProductStatus.Active;
+    const toggledId = confirmTarget.id;
     const result = await toggle.run(confirmTarget.id, archiving);
     setConfirmTarget(null);
     if (result.ok) {
       toast.show({ variant: 'success', message: archiving ? 'تمت الأرشفة' : 'تمت إعادة التنشيط' });
       await reload();
+      recentRow.mark(toggledId);
     }
   }
 
@@ -185,16 +193,28 @@ export function ProductsScreen() {
         rows={pageRows}
         rowKey={(row) => row.id}
         onRowClick={(row) => openDialog(row)}
-        rowActions={(row) => (
-          <span className="flex items-center gap-xs">
-            <Button variant="ghost" size="sm" onClick={() => openDialog(row)}>
-              تعديل
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmTarget(row)}>
-              {row.status === ProductStatus.Active ? 'أرشفة' : 'تنشيط'}
-            </Button>
-          </span>
-        )}
+        rowActions={(row) => {
+          const active = row.status === ProductStatus.Active;
+          return (
+            <RowActions
+              actions={[
+                {
+                  key: 'edit',
+                  label: 'تعديل',
+                  icon: <PencilIcon />,
+                  onSelect: () => openDialog(row),
+                },
+                {
+                  key: 'toggle',
+                  label: active ? 'أرشفة' : 'إعادة تنشيط',
+                  icon: active ? <InboxIcon /> : <RotateIcon />,
+                  onSelect: () => setConfirmTarget(row),
+                  danger: active,
+                },
+              ]}
+            />
+          );
+        }}
         loading={pending && products.length === 0}
         error={error}
         onRetry={() => void reload()}

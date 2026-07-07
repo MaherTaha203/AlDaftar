@@ -15,13 +15,18 @@ import { ListPage, useOperation } from '../../framework';
 import {
   Button,
   DocumentStatus,
+  EyeIcon,
   FilterPanel,
   MissingInvoiceBadge,
   MoneyDisplay,
+  PencilIcon,
   PlusIcon,
+  PrinterIcon,
+  RowActions,
   Select,
   formatDate,
   type DataTableColumn,
+  type RowAction,
 } from '../../ui';
 
 /**
@@ -228,6 +233,32 @@ export function PurchasesList() {
             : `/purchases/${row.id}`,
         )
       }
+      rowActions={(row) => {
+        const isDraft = row.status === PurchaseStatus.Draft;
+        const actions: RowAction[] = [
+          {
+            key: 'view',
+            label: 'عرض',
+            icon: <EyeIcon />,
+            onSelect: () => router.push(`/purchases/${row.id}`),
+          },
+        ];
+        if (isDraft) {
+          actions.push({
+            key: 'edit',
+            label: 'تعديل',
+            icon: <PencilIcon />,
+            onSelect: () => router.push(`/purchases/${row.id}/edit`),
+          });
+        }
+        actions.push({
+          key: 'print',
+          label: 'طباعة',
+          icon: <PrinterIcon />,
+          onSelect: () => router.push(`/purchases/${row.id}/print`),
+        });
+        return <RowActions actions={actions} />;
+      }}
       loading={pending && purchases.length === 0}
       error={error}
       onRetry={() => void load().then((r) => r.ok && setPurchases(r.value))}

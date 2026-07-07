@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
   getPaymentService,
@@ -11,7 +12,7 @@ import {
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
-import { PageLayout } from '../../app';
+import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
@@ -34,6 +35,7 @@ export interface PaymentDetailProps {
 }
 
 export function PaymentDetail({ paymentId }: PaymentDetailProps) {
+  const router = useRouter();
   const [payment, setPayment] = useState<Payment | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
 
@@ -46,6 +48,13 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
   }, [paymentId, load, loadSuppliers]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+
+  // F2 edits the payment while it is still a draft (posted payments are immutable).
+  useShortcut(
+    'edit',
+    () => router.push(`/payments/${paymentId}/edit`),
+    payment?.status === PaymentStatus.Draft,
+  );
 
   if (error !== null) {
     return (

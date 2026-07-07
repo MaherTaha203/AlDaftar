@@ -15,12 +15,17 @@ import { ListPage, useOperation } from '../../framework';
 import {
   Button,
   DocumentStatus,
+  EyeIcon,
   FilterPanel,
   MoneyDisplay,
+  PencilIcon,
   PlusIcon,
+  PrinterIcon,
+  RowActions,
   Select,
   formatDate,
   type DataTableColumn,
+  type RowAction,
 } from '../../ui';
 
 /**
@@ -162,6 +167,32 @@ export function ReturnsList() {
             : `/purchase-returns/${row.id}`,
         )
       }
+      rowActions={(row) => {
+        const isDraft = row.status === ReturnStatus.Draft;
+        const actions: RowAction[] = [
+          {
+            key: 'view',
+            label: 'عرض',
+            icon: <EyeIcon />,
+            onSelect: () => router.push(`/purchase-returns/${row.id}`),
+          },
+        ];
+        if (isDraft) {
+          actions.push({
+            key: 'edit',
+            label: 'تعديل',
+            icon: <PencilIcon />,
+            onSelect: () => router.push(`/purchase-returns/${row.id}/edit`),
+          });
+        }
+        actions.push({
+          key: 'print',
+          label: 'طباعة',
+          icon: <PrinterIcon />,
+          onSelect: () => router.push(`/purchase-returns/${row.id}/print`),
+        });
+        return <RowActions actions={actions} />;
+      }}
       loading={pending && returns.length === 0}
       error={error}
       onRetry={() => void load().then((r) => r.ok && setReturns(r.value))}

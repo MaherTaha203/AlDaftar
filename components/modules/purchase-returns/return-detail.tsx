@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { getProductService, type Product } from '@/lib/modules/products';
 import {
@@ -16,7 +17,7 @@ import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { getUnitService, type Unit } from '@/lib/modules/units';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
-import { PageLayout } from '../../app';
+import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
@@ -41,6 +42,7 @@ export interface ReturnDetailProps {
 }
 
 export function ReturnDetail({ returnId }: ReturnDetailProps) {
+  const router = useRouter();
   const [record, setRecord] = useState<PurchaseReturn | null>(null);
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
@@ -68,6 +70,13 @@ export function ReturnDetail({ returnId }: ReturnDetailProps) {
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
   const unitName = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+
+  // F2 edits the return while it is still a draft (posted returns are immutable).
+  useShortcut(
+    'edit',
+    () => router.push(`/purchase-returns/${returnId}/edit`),
+    record?.status === ReturnStatus.Draft,
+  );
 
   const lineColumns = useMemo<readonly DataTableColumn<ReturnLine>[]>(
     () => [

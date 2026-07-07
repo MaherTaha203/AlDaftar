@@ -95,3 +95,35 @@ html {
   --tbl-row-h: 3.5rem; /* 56px */
   --ctrl-h: 2.75rem; /* 44px */
 }
+
+/*
+ * Smart Row Highlight (Productivity Sprint #9). After returning to a list from
+ * a create / edit, the affected row briefly glows then settles — a calm "here
+ * it is" cue that preserves context without a jarring flash. Emerald tint via
+ * an inset accent + background wash; respects reduced-motion by holding a
+ * static tint instead of animating.
+ */
+@keyframes row-highlight-fade {
+  0% {
+    background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+    box-shadow: inset -3px 0 0 var(--color-primary);
+  }
+  70% {
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    box-shadow: inset -3px 0 0 var(--color-primary);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset -3px 0 0 transparent;
+  }
+}
+.row-highlight {
+  animation: row-highlight-fade 2.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .row-highlight {
+    animation: none;
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    box-shadow: inset -3px 0 0 var(--color-primary);
+  }
+}

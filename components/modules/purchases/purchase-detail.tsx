@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { getProductService, type Product } from '@/lib/modules/products';
 import {
@@ -15,7 +16,7 @@ import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { getUnitService, type Unit } from '@/lib/modules/units';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
-import { PageLayout } from '../../app';
+import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
@@ -43,6 +44,7 @@ export interface PurchaseDetailProps {
 }
 
 export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
+  const router = useRouter();
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [products, setProducts] = useState<readonly Product[]>([]);
@@ -63,6 +65,14 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
   const unitName = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
+
+  // F2 edits the document while it is still a draft (posted documents are
+  // immutable, so no edit/delete is offered).
+  useShortcut(
+    'edit',
+    () => router.push(`/purchases/${purchaseId}/edit`),
+    purchase?.status === PurchaseStatus.Draft,
+  );
 
   const lineColumns = useMemo<readonly DataTableColumn<PurchaseLine>[]>(
     () => [
