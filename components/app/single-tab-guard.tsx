@@ -52,7 +52,7 @@ export function SingleTabGuard({ children }: { children: ReactNode }) {
   return (
     <main className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-md bg-white p-lg text-center">
       <h1 className="text-2xl font-bold">الدفتر مفتوح في نافذة أخرى</h1>
-      <p className="max-w-md text-sm text-neutral-500">
+      <p className="max-w-[28rem] text-sm text-neutral-500">
         لحماية البيانات من التعارض، يعمل الدفتر في نافذة واحدة فقط. أغلق النافذة الأخرى ثم تابع من
         هنا.
       </p>
