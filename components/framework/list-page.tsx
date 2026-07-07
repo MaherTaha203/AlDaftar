@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { PageLayout } from '../app';
+import { recentRow } from '../app/recent-row-store';
 import { useShortcut } from '../app/use-shortcut';
 import { Toolbar } from '../layout';
 import {
@@ -90,6 +91,21 @@ export function ListPage<TRow>({
   useShortcut('search', () => searchRef.current?.focus(), search !== undefined);
   useShortcut('new', () => onNew?.(), onNew !== undefined);
 
+  // Smart Row Highlight (#9): pick up a row marked by a create / edit flow and
+  // clear it once the CSS glow has run so it fires exactly once per return.
+  const highlightKey = useSyncExternalStore(
+    recentRow.subscribe,
+    recentRow.getSnapshot,
+    recentRow.getServerSnapshot,
+  );
+  useEffect(() => {
+    if (highlightKey == null) {
+      return;
+    }
+    const timer = setTimeout(() => recentRow.clear(), 2400);
+    return () => clearTimeout(timer);
+  }, [highlightKey]);
+
   return (
     <PageLayout
       title={title}
@@ -139,6 +155,7 @@ export function ListPage<TRow>({
           // the toolbar off-screen. Short lists never reach the cap.
           stickyHeader
           maxHeight="calc(100dvh - 13rem)"
+          highlightKey={highlightKey}
           emptyState={<EmptyState message={emptyMessage} action={emptyAction} />}
         />
       )}

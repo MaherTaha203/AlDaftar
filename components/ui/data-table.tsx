@@ -51,6 +51,8 @@ export interface DataTableProps<TRow> {
   stickyHeader?: boolean;
   /** CSS max-height that turns the table into a vertical scroll container. */
   maxHeight?: string;
+  /** Row key to briefly highlight (Productivity Sprint #9, Smart Row Highlight). */
+  highlightKey?: string | number | null;
   className?: string;
 }
 
@@ -75,6 +77,7 @@ export function DataTable<TRow>({
   emptyState,
   stickyHeader = true,
   maxHeight,
+  highlightKey,
   className,
 }: DataTableProps<TRow>) {
   const sticky = stickyHeader && maxHeight !== undefined;
@@ -164,8 +167,9 @@ export function DataTable<TRow>({
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
-                'border-b border-neutral-200/60 last:border-b-0 transition-colors duration-150',
+                'group/row border-b border-neutral-200/60 last:border-b-0 transition-colors duration-150',
                 onRowClick && 'cursor-pointer hover:bg-primary/[0.05]',
+                highlightKey != null && rowKey(row) === highlightKey && 'row-highlight',
               )}
             >
               {columns.map((column) => (

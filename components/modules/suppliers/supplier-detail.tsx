@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
 import { getSupplierService, SupplierStatus, type Supplier } from '@/lib/modules/suppliers';
-import { PageLayout } from '../../app';
+import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import { Button, Card, ConfirmDialog, ErrorState, Skeleton, StatusBadge, useToast } from '../../ui';
@@ -30,9 +31,20 @@ const infoRows: readonly { label: string; key: 'phone' | 'address' | 'taxReferen
   ];
 
 export function SupplierDetail({ supplierId }: SupplierDetailProps) {
+  const router = useRouter();
   const toast = useToast();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [confirming, setConfirming] = useState(false);
+
+  // Current-record shortcuts (Productivity Sprint #3, activated in Batch B):
+  // F2 edits, Delete opens the archive confirmation while the supplier is
+  // active. Both no-op until the record has loaded.
+  useShortcut('edit', () => router.push(`/suppliers/${supplierId}/edit`), supplier !== null);
+  useShortcut(
+    'delete',
+    () => setConfirming(true),
+    supplier !== null && supplier.status === SupplierStatus.Active,
+  );
 
   const { run: loadSupplier, error: loadError } = useOperation((id: string) =>
     getSupplierService().getById(id),

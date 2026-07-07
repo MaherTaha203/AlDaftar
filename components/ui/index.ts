@@ -21,6 +21,8 @@ export {
   type DataTableSort,
 } from './data-table';
 export { Pagination, type PaginationProps } from './pagination';
+export { Menu, type MenuItem, type MenuProps } from './menu';
+export { RowActions, type RowAction, type RowActionsProps } from './row-actions';
 export { Dialog, type DialogProps, type DialogSize } from './dialog';
 export { ConfirmDialog, type ConfirmDialogProps } from './confirm-dialog';
 export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from './toast';
