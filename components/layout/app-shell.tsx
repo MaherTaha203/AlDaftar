@@ -40,7 +40,14 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
   }, [drawerOpen]);
 
   return (
-    <div className={cn('flex h-dvh overflow-hidden bg-neutral-100/60', className)}>
+    <div
+      className={cn(
+        // Calm, static workspace ground — a very subtle emerald-tinted wash
+        // (no motion inside the app, per the design brief).
+        'flex h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-neutral-100)_0%,color-mix(in_srgb,var(--color-neutral-100)_55%,white)_100%)]',
+        className,
+      )}
+    >
       <div className="screen-only max-md:hidden">
         <Sidebar {...sidebar} />
       </div>

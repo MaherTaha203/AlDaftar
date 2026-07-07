@@ -41,7 +41,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
     <nav
       aria-label="التنقل الرئيسي"
       className={cn(
-        'flex h-full w-[260px] flex-col gap-lg overflow-y-auto border-e border-neutral-200 bg-white p-md',
+        'flex h-full w-[260px] flex-col gap-lg overflow-y-auto border-e border-neutral-200 bg-white/95 p-md backdrop-blur-sm',
         'max-xl:w-16 max-xl:items-center max-md:w-[260px] max-md:items-stretch',
         className,
       )}
@@ -62,11 +62,13 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
                     aria-current={active ? 'page' : undefined}
                     title={item.label}
                     className={cn(
-                      'flex items-center gap-sm rounded-md px-sm py-sm text-sm transition-colors',
+                      'relative flex items-center gap-sm rounded-md px-sm py-sm text-sm transition-colors duration-150',
                       'focus-visible:outline-2 focus-visible:outline-primary',
+                      // Active: soft emerald wash + a rounded accent bar at the
+                      // inline-start edge (the "you are here" indicator).
                       active
-                        ? 'bg-primary/10 font-medium text-primary'
-                        : 'text-neutral-500 hover:bg-neutral-100',
+                        ? 'bg-primary/[0.08] font-semibold text-primary before:absolute before:inset-y-1.5 before:start-0 before:w-[3px] before:rounded-full before:bg-primary max-xl:before:hidden max-md:before:block'
+                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700',
                     )}
                   >
                     {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
