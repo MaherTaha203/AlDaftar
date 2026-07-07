@@ -7,6 +7,7 @@ import { AuditAction, getAuditService } from '@/lib/modules/audit';
 import { AppShell } from '../layout';
 import { Button, uiText } from '../ui';
 import { APP_BRAND, navigationGroups } from './navigation';
+import { ProductivityBar } from './productivity-bar';
 
 /**
  * AppShellFrame — binds the reusable `AppShell` (Sprint 1) to this
@@ -47,9 +48,12 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
       header={{
         title: <span className="sr-only">{APP_BRAND}</span>,
         actions: (
-          <Button variant="ghost" size="sm" loading={signingOut} onClick={() => void onLogout()}>
-            {uiText.auth.logout}
-          </Button>
+          <>
+            <ProductivityBar />
+            <Button variant="ghost" size="sm" loading={signingOut} onClick={() => void onLogout()}>
+              {uiText.auth.logout}
+            </Button>
+          </>
         ),
       }}
     >
