@@ -44,7 +44,7 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
     <AppShell
       sidebar={{
         groups: navigationGroups,
-        brand: <span className="text-base font-semibold text-primary">{APP_BRAND}</span>,
+        brand: <span className="text-base font-semibold text-white">{APP_BRAND}</span>,
       }}
       header={{
         title: <span className="sr-only">{APP_BRAND}</span>,
