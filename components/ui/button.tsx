@@ -6,16 +6,23 @@ import { Spinner } from './spinner';
 
 /**
  * Button — 04_Component_Library.md §1, Royal Emerald interaction language.
- * Variants: primary | secondary | danger | ghost | link. Sizes: md | sm.
- * `loading` shows a spinner while preserving width and sets `aria-busy`;
- * the button is inert while loading. Icon-only usage must pass `aria-label`.
+ * Variants: primary | secondary | outline | ghost | success | danger | link.
+ * Sizes: md | sm. `loading` shows a spinner while preserving width and sets
+ * `aria-busy`; the button is inert while loading. Icon-only usage must pass
+ * `aria-label`.
  *
  * Interaction (approved motion spec): 150–220ms transitions only — gentle
  * lift on hover, 0.99 scale on press, soft shadow expansion, and on filled
  * variants a very subtle cursor-following light (radial highlight driven by
  * the --mx/--my custom properties; pure CSS paint, no layout work).
+ *
+ * `outline` — a quiet emerald-bordered action (e.g. the header Logout); reads
+ * as an action without the weight of a filled button. `success` — a filled
+ * confirmation action (post / restore-complete), semantically green and kept
+ * distinct from the teal-leaning primary so it never competes with it.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'link';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger' | 'link';
 export type ButtonSize = 'md' | 'sm';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -43,6 +50,15 @@ const variantClasses: Record<ButtonVariant, string> = {
   secondary:
     'border border-neutral-300 bg-white text-neutral-500 hover:bg-neutral-100 ' +
     'hover:border-neutral-400/70 shadow-sm hover:shadow-md focus-visible:outline-primary',
+  outline:
+    'border-[1.5px] border-primary bg-transparent text-primary ' +
+    'hover:bg-primary/[0.08] focus-visible:outline-primary',
+  success:
+    'text-white focus-visible:outline-success ' +
+    'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-success)_88%,white)_0%,var(--color-success)_100%)] ' +
+    'shadow-[0_1px_2px_rgba(16,33,27,0.10),0_2px_10px_rgba(23,138,76,0.24)] ' +
+    'hover:shadow-[0_2px_4px_rgba(16,33,27,0.10),0_6px_16px_rgba(23,138,76,0.32)] ' +
+    litClasses,
   danger:
     'text-white focus-visible:outline-danger ' +
     'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-danger)_88%,white)_0%,var(--color-danger)_100%)] ' +
@@ -71,7 +87,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   { variant = 'primary', size = 'md', loading = false, icon, className, children, ...props },
   ref,
 ) {
-  const lit = variant === 'primary' || variant === 'danger';
+  const lit = variant === 'primary' || variant === 'danger' || variant === 'success';
   return (
     <button
       ref={ref}

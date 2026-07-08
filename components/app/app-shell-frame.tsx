@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { signOut } from '@/lib/infrastructure';
 import { AuditAction, getAuditService } from '@/lib/modules/audit';
 import { AppShell } from '../layout';
-import { Button, uiText } from '../ui';
+import { Button, LogOutIcon, uiText } from '../ui';
 import { APP_BRAND, navigationGroups } from './navigation';
 import { FocusToggle } from './focus-toggle';
 import { ProductivityBar } from './productivity-bar';
@@ -54,7 +54,13 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
               <ProductivityBar />
             </span>
             <FocusToggle />
-            <Button variant="ghost" size="sm" loading={signingOut} onClick={() => void onLogout()}>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<LogOutIcon />}
+              loading={signingOut}
+              onClick={() => void onLogout()}
+            >
               {uiText.auth.logout}
             </Button>
           </>
