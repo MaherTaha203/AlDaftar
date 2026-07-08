@@ -8,10 +8,23 @@ import { cn } from './cn';
  * `href` is given the whole card is a link (dashboard tiles navigate to
  * their module, 02 §S-00). Business-blind: values arrive pre-computed.
  */
+/** Semantic accent for a tile — a small category cue, not decoration. */
+export type StatAccent = 'primary' | 'copper' | 'success' | 'warning' | 'danger';
+
+const ACCENT_COLOR: Record<StatAccent, string> = {
+  primary: 'var(--color-primary)',
+  copper: 'var(--color-copper)',
+  success: 'var(--color-success)',
+  warning: 'var(--color-warning)',
+  danger: 'var(--color-danger)',
+};
+
 export interface StatCardProps {
   label: string;
   value: ReactNode;
   icon?: ReactNode;
+  /** Small category indicator dot before the label (semantic, not decorative). */
+  accent?: StatAccent;
   /** Secondary line under the value (e.g. a period note). */
   description?: string;
   /** Navigation target; renders the card as a link when provided. */
@@ -19,14 +32,33 @@ export interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({ label, value, icon, description, href, className }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  icon,
+  accent,
+  description,
+  href,
+  className,
+}: StatCardProps) {
   const body = (
     <>
       <div className="flex items-center justify-between gap-sm">
-        <p className="text-sm text-neutral-500">{label}</p>
+        <p className="flex items-center gap-sm text-sm text-neutral-500">
+          {accent ? (
+            <span
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-full"
+              style={{ background: ACCENT_COLOR[accent] }}
+            />
+          ) : null}
+          {label}
+        </p>
         {icon ? <span className="text-neutral-400">{icon}</span> : null}
       </div>
-      <div className="text-2xl font-semibold">{value}</div>
+      <div className="text-[26px] font-bold leading-tight tracking-[-0.01em] tabular-nums">
+        {value}
+      </div>
       {description !== undefined ? <p className="text-xs text-neutral-400">{description}</p> : null}
     </>
   );

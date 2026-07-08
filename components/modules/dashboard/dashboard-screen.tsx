@@ -146,14 +146,22 @@ export function DashboardScreen() {
           <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               label="إجمالي المستحق للموردين"
+              accent="copper"
               value={
                 <MoneyDisplay value={view.totalPayable} currencyLabel={BOOK_CURRENCY.symbol} />
               }
               href="/reports/supplier-balances"
             />
-            <StatCard label="موردون برصيد" value={view.suppliersWithBalance} href="/suppliers" />
+            <StatCard
+              label="موردون برصيد"
+              accent="primary"
+              value={view.suppliersWithBalance}
+              description="موردون لهم رصيد قائم"
+              href="/suppliers"
+            />
             <StatCard
               label="مشتريات هذا الشهر"
+              accent="primary"
               value={
                 <MoneyDisplay
                   value={view.purchasesThisMonth}
@@ -164,12 +172,19 @@ export function DashboardScreen() {
             />
             <StatCard
               label="مدفوعات هذا الشهر"
+              accent="success"
               value={
                 <MoneyDisplay value={view.paymentsThisMonth} currencyLabel={BOOK_CURRENCY.symbol} />
               }
               href="/payments"
             />
-            <StatCard label="مسودات بانتظار الترحيل" value={view.draftsCount} href="/purchases" />
+            <StatCard
+              label="مسودات بانتظار الترحيل"
+              accent={view.draftsCount > 0 ? 'warning' : 'primary'}
+              value={view.draftsCount}
+              description={view.draftsCount > 0 ? 'تحتاج مراجعة وترحيل' : 'لا مسودات معلّقة'}
+              href="/purchases"
+            />
           </div>
 
           <section className="rounded-lg border border-neutral-200 bg-white shadow-sm">

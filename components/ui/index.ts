@@ -24,6 +24,7 @@ export { Pagination, type PaginationProps } from './pagination';
 export { Menu, type MenuItem, type MenuProps } from './menu';
 export { RowActions, type RowAction, type RowActionsProps } from './row-actions';
 export { SideDetailPanel, PeekField, type SideDetailPanelProps } from './side-detail-panel';
+export { DocumentActionBar, type DocumentAction } from './document-action-bar';
 export { HoverPreview, type HoverPreviewProps } from './hover-preview';
 export { Dialog, type DialogProps, type DialogSize } from './dialog';
 export { ConfirmDialog, type ConfirmDialogProps } from './confirm-dialog';
@@ -61,7 +62,7 @@ export {
   type DocumentState,
   type DocumentStatusProps,
 } from './document-status';
-export { StatCard, type StatCardProps } from './stat-card';
+export { StatCard, type StatAccent, type StatCardProps } from './stat-card';
 export { Tabs, type TabItem, type TabsProps } from './tabs';
 export { DatePicker, type DatePickerProps } from './date-picker';
 export { FilterPanel, type FilterChip, type FilterPanelProps } from './filter-panel';
