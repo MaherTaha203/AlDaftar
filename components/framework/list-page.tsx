@@ -35,6 +35,8 @@ export interface ListPageSearch {
 export interface ListPageProps<TRow> {
   /** Page heading override; defaults to the route title. */
   title?: ReactNode;
+  /** Optional one-line page description under the title (Visual Identity #16). */
+  description?: ReactNode;
   /** Primary action(s) in the title row (e.g. the create Button). */
   primaryAction?: ReactNode;
   /** In-list search wiring; omitted = no search box. */
@@ -64,6 +66,7 @@ export interface ListPageProps<TRow> {
 
 export function ListPage<TRow>({
   title,
+  description,
   primaryAction,
   search,
   toolbarActions,
@@ -109,6 +112,7 @@ export function ListPage<TRow>({
   return (
     <PageLayout
       title={title}
+      description={description}
       actions={primaryAction}
       toolbar={
         showToolbar || filters !== undefined ? (

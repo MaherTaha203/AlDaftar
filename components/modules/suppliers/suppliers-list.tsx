@@ -88,6 +88,7 @@ export function SuppliersList() {
   return (
     <>
       <ListPage
+        description="جهات التوريد، بيانات التواصل، والحالة."
         primaryAction={
           <Link href="/suppliers/new">
             <Button icon={<PlusIcon />}>مورد جديد</Button>

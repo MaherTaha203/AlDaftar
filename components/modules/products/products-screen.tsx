@@ -181,6 +181,7 @@ export function ProductsScreen() {
   return (
     <>
       <ListPage
+        description="أصناف المشتريات ووحداتها وتصنيفاتها."
         primaryAction={
           <Button icon={<PlusIcon />} onClick={() => openDialog()}>
             منتج جديد

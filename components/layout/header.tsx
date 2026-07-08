@@ -26,7 +26,12 @@ export function Header({ title, search, actions, onMenuClick, className }: Heade
   return (
     <header
       className={cn(
-        'flex h-14 items-center gap-md border-b border-neutral-200 bg-white/85 px-md backdrop-blur-md',
+        // Shared design language with the emerald rail (Visual Identity #5):
+        // same surface treatment + a faint copper hairline along the bottom
+        // edge, the accent that also marks the rail's brand and System Center.
+        'relative flex h-14 items-center gap-md border-b border-neutral-200 bg-white/85 px-md backdrop-blur-md',
+        'after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px',
+        'after:bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--color-copper)_35%,transparent)_35%,color-mix(in_srgb,var(--color-copper)_35%,transparent)_65%,transparent)]',
         className,
       )}
     >

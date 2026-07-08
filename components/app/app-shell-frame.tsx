@@ -9,6 +9,7 @@ import { Button, LogOutIcon, uiText } from '../ui';
 import { APP_BRAND, navigationGroups } from './navigation';
 import { FocusToggle } from './focus-toggle';
 import { ProductivityBar } from './productivity-bar';
+import { SidebarBrand } from './sidebar-brand';
 import {
   GlobalSearch,
   HelpButton,
@@ -52,7 +53,7 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
     <AppShell
       sidebar={{
         groups: navigationGroups,
-        brand: <span className="text-base font-semibold text-white">{APP_BRAND}</span>,
+        brand: <SidebarBrand />,
       }}
       header={{
         title: <span className="sr-only">{APP_BRAND}</span>,

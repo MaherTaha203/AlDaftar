@@ -107,6 +107,7 @@ export function PaymentsList() {
   return (
     <>
       <ListPage
+        description="سندات الدفع للموردين وحالتها."
         onNew={() => router.push('/payments/new')}
         primaryAction={
           <Link href="/payments/new">
