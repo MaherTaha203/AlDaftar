@@ -11,6 +11,7 @@ import { FocusToggle } from './focus-toggle';
 import { ProductivityBar } from './productivity-bar';
 import { SidebarBrand } from './sidebar-brand';
 import {
+  BackupStatus,
   GlobalSearch,
   HelpButton,
   NotificationsBell,
@@ -64,6 +65,7 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
               <QuickCreate />
               <NotificationsBell />
               <ProductivityBar />
+              <BackupStatus />
               <span className="mx-0.5 h-5 w-px bg-neutral-200" aria-hidden="true" />
               <HelpButton />
               <SystemCenter />

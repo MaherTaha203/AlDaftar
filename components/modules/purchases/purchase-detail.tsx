@@ -20,6 +20,7 @@ import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
   Card,
+  ConfirmDialog,
   DataTable,
   DocumentActionBar,
   DocumentStatus,
@@ -31,7 +32,9 @@ import {
   PrinterIcon,
   RotateIcon,
   Skeleton,
+  TrashIcon,
   formatDate,
+  useToast,
   type DataTableColumn,
 } from '../../ui';
 
@@ -48,12 +51,26 @@ export interface PurchaseDetailProps {
 
 export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
   const router = useRouter();
+  const toast = useToast();
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [products, setProducts] = useState<readonly Product[]>([]);
   const [units, setUnits] = useState<readonly Unit[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { run: load, error } = useOperation((id: string) => getPurchaseService().getById(id));
+  const del = useOperation((id: string) => getPurchaseService().deleteDraft(id));
+
+  async function handleDelete() {
+    const result = await del.run(purchaseId);
+    setConfirmDelete(false);
+    if (result.ok) {
+      toast.show({ variant: 'success', message: 'تم حذف المسودة' });
+      router.push('/purchases');
+    } else {
+      toast.show({ variant: 'error', message: del.error ?? 'تعذّر حذف المسودة' });
+    }
+  }
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
   const { run: loadProducts } = useOperation(() => getProductService().list());
   const { run: loadUnits } = useOperation(() => getUnitService().list());
@@ -76,6 +93,9 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
     () => router.push(`/purchases/${purchaseId}/edit`),
     purchase?.status === PurchaseStatus.Draft,
   );
+  // Delete key removes a draft (with confirmation); posted documents never
+  // register a delete handler, so the key stays inert on them.
+  useShortcut('delete', () => setConfirmDelete(true), purchase?.status === PurchaseStatus.Draft);
 
   const lineColumns = useMemo<readonly DataTableColumn<PurchaseLine>[]>(
     () => [
@@ -174,6 +194,17 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
                 onSelect: () =>
                   document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
               },
+              {
+                key: 'delete',
+                label: 'حذف',
+                icon: <TrashIcon />,
+                variant: isDraft ? 'danger' : 'secondary',
+                disabled: !isDraft,
+                disabledReason: isDraft
+                  ? undefined
+                  : 'لا يمكن حذف مستند مرحّل — الدفتر سجلّ محاسبي غير قابل للتعديل. استخدم الإبطال مستقبلًا.',
+                onSelect: () => setConfirmDelete(true),
+              },
             ]}
           />
         }
@@ -227,6 +258,19 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
           allowDelete={isDraft}
         />
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="حذف مسودة الشراء"
+        confirmLabel="حذف نهائيًا"
+        danger
+        busy={del.pending}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setConfirmDelete(false)}
+      >
+        سيُحذف هذا المستند المسودة نهائيًا ولا يمكن التراجع. المسودّات لا تحمل رقمًا ولا أثرًا في
+        الدفتر، لذا الحذف آمن محاسبيًا — وسيُسجَّل في سجل التدقيق.
+      </ConfirmDialog>
     </PageLayout>
   );
 }

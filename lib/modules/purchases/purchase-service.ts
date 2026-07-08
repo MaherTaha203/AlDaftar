@@ -31,7 +31,7 @@ function purchaseLabel(purchase: Purchase): string {
  */
 export type PurchaseRepository = Pick<
   LocalRecordStore<Purchase>,
-  'findAll' | 'findById' | 'create' | 'update'
+  'findAll' | 'findById' | 'create' | 'update' | 'remove'
 >;
 
 export function getPurchaseRepository(): PurchaseRepository {
@@ -191,6 +191,28 @@ export class PurchaseService extends ApplicationService {
         after: posted,
       });
       return posted;
+    });
+  }
+
+  /**
+   * Delete a DRAFT purchase. Posted documents are immutable and never deleted
+   * (continuous numbering + append-only audit); the guard enforces this even
+   * though the UI also disables the action. A draft has no number and no
+   * ledger effect, so its removal is accounting-safe — and audited.
+   */
+  deleteDraft(id: string): AsyncResult<void> {
+    return this.execute('purchases.deleteDraft', async () => {
+      const purchase = await this.require(id);
+      this.assertDraft(purchase);
+      this.unwrap(await this.repository.remove(id));
+      await getAuditService().record({
+        action: AuditAction.Delete,
+        entityType: 'purchases',
+        entityId: id,
+        entityLabel: purchaseLabel(purchase),
+        summary: 'حذف مسودة شراء',
+        before: purchase,
+      });
     });
   }
 
