@@ -6,10 +6,16 @@
  * decoration: success is a pure green (distinct from the teal-leaning
  * primary), warning a deep gold, danger a terracotta red. All text-bearing
  * colors hold ≥ 4.5:1 on white (WCAG AA; AAA where practical).
+ *
+ * `copper` is the secondary brand accent, carried over from the approved
+ * Ink & Copper print identity. It is spent sparingly on screen — premium
+ * hairlines, the System Center utility, and eyebrow marks — never as a second
+ * interactive accent (the primary emerald owns interaction).
  */
 export const colors = {
   primary: '#0c6e5f',
   secondary: '#5f6b66',
+  copper: '#a86a3d',
   success: '#178a4c',
   warning: '#a16207',
   danger: '#c2452f',
