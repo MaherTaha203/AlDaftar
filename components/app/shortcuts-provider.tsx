@@ -1,11 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Dialog, Input, cn } from '../ui';
 import { calculatorWindow } from './calculator-store';
 import { focusMode } from './focus-store';
 import { navigationGroups } from './navigation';
+import { commandPalette, shortcutGuide } from './overlay-store';
 import { shortcutRegistry, type ShortcutAction } from './shortcut-registry';
 
 /**
@@ -58,15 +59,22 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 export function ShortcutsProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
-
-  const openPalette = useCallback(() => {
-    setGuideOpen(false);
-    setPaletteOpen(true);
-  }, []);
+  const paletteOpen = useSyncExternalStore(
+    commandPalette.subscribe,
+    commandPalette.getSnapshot,
+    commandPalette.getServerSnapshot,
+  );
+  const guideOpen = useSyncExternalStore(
+    shortcutGuide.subscribe,
+    shortcutGuide.getSnapshot,
+    shortcutGuide.getServerSnapshot,
+  );
 
   useEffect(() => {
+    const openPalette = () => {
+      shortcutGuide.close();
+      commandPalette.open();
+    };
     function onKeyDown(event: KeyboardEvent) {
       const mod = event.ctrlKey || event.metaKey;
       const editable = isEditableTarget(event.target);
@@ -88,7 +96,7 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (!mod && !event.altKey && event.key === '?' && !editable) {
-        setGuideOpen(true);
+        shortcutGuide.open();
         event.preventDefault();
         return;
       }
@@ -135,20 +143,20 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [openPalette]);
+  }, []);
 
   return (
     <>
       {children}
       <CommandPalette
         open={paletteOpen}
-        onClose={() => setPaletteOpen(false)}
+        onClose={() => commandPalette.close()}
         onSelect={(href) => {
-          setPaletteOpen(false);
+          commandPalette.close();
           router.push(href);
         }}
       />
-      <ShortcutGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
+      <ShortcutGuide open={guideOpen} onClose={() => shortcutGuide.close()} />
     </>
   );
 }

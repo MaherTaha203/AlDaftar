@@ -9,6 +9,14 @@ import { Button, LogOutIcon, uiText } from '../ui';
 import { APP_BRAND, navigationGroups } from './navigation';
 import { FocusToggle } from './focus-toggle';
 import { ProductivityBar } from './productivity-bar';
+import {
+  GlobalSearch,
+  HelpButton,
+  NotificationsBell,
+  QuickCreate,
+  SystemCenter,
+  UserMenu,
+} from './top-bar';
 
 /**
  * AppShellFrame — binds the reusable `AppShell` (Sprint 1) to this
@@ -48,10 +56,17 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
       }}
       header={{
         title: <span className="sr-only">{APP_BRAND}</span>,
+        search: <GlobalSearch />,
         actions: (
           <>
             <span className="app-focus-collapsible contents">
+              <QuickCreate />
+              <NotificationsBell />
               <ProductivityBar />
+              <span className="mx-0.5 h-5 w-px bg-neutral-200" aria-hidden="true" />
+              <HelpButton />
+              <SystemCenter />
+              <UserMenu />
             </span>
             <FocusToggle />
             <Button
