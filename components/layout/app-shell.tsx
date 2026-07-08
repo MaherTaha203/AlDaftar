@@ -66,13 +66,13 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
         }}
         className="screen-only m-0 h-dvh max-h-none w-full max-w-none bg-transparent backdrop:bg-black/40 md:hidden"
       >
-        <div className="absolute inset-y-0 start-0 flex bg-white shadow-lg">
+        <div className="absolute inset-y-0 start-0 flex bg-[color-mix(in_srgb,var(--color-primary)_82%,#020e0b)] shadow-lg">
           <Sidebar {...sidebar} />
           <button
             type="button"
             aria-label={uiText.close}
             onClick={() => setDrawerOpen(false)}
-            className="absolute end-sm top-sm rounded-md p-xs text-neutral-400 hover:text-neutral-500 focus-visible:outline-2 focus-visible:outline-primary"
+            className="absolute end-sm top-sm rounded-md p-xs text-white/70 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
           >
             <CloseIcon />
           </button>
