@@ -21,7 +21,8 @@
     "verify:schema": "node scripts/verify-supabase-schema.mjs",
     "admin:create": "node scripts/create-admin.mjs",
     "backup": "node scripts/backup.mjs",
-    "restore": "node scripts/restore.mjs"
+    "restore": "node scripts/restore.mjs",
+    "reset": "node scripts/reset.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-arabic": "^5.2.9",

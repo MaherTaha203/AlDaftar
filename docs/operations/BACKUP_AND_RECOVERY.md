@@ -108,3 +108,28 @@ an uncommitted working tree is itself a disaster-recovery gap.
 - **Weekly:** `npm run backup`; copy `backups/<latest>` off-site (encrypted).
 - **Quarterly:** a test `npm run restore` into a scratch project; confirm counts.
 - **On plan change:** re-check that Supabase managed backups are still enabled.
+
+## 9. Development reset (go-live cleanup)
+
+Before entering real accounting data, wipe development/test transactions while
+keeping every configuration:
+
+```bash
+npm run reset -- --dry-run   # preview: shows exact counts, deletes nothing
+npm run reset                # takes a backup, confirms, then wipes operational data
+```
+
+- **Removes** suppliers, products, purchases, purchase returns, payments, and
+  attachments (rows + storage binaries). **Preserves** auth/users, settings,
+  company profile, categories, units, currencies, and the numbering
+  configuration. Numbering is derived (`max+1`), so counters return to 1 on
+  their own once documents are gone — there is no counter table to reset.
+- **Safety:** it runs `backup` and verifies the manifest **before** deleting
+  anything, shows the counts, and requires typing `RESET`. Idempotent — a
+  second run finds a clean database and does nothing.
+- **Audit log** is kept by default (append-only), with one entry recording the
+  reset. Pass `--purge-audit` to also clear it for a completely fresh history.
+- **Why a maintenance script, not the business services:** the services
+  deliberately forbid these deletions (posted documents are immutable, audit is
+  append-only, master data archives rather than deletes). Like backup/restore,
+  the reset uses the service-role key server-side — never the browser.
