@@ -21,12 +21,15 @@ import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
-  Button,
   Card,
   DataTable,
+  DocumentActionBar,
   DocumentStatus,
   ErrorState,
   MoneyDisplay,
+  PaperclipIcon,
+  PencilIcon,
+  PrinterIcon,
   Skeleton,
   formatDate,
   type DataTableColumn,
@@ -138,20 +141,36 @@ export function ReturnDetail({ returnId }: ReturnDetailProps) {
           </span>
         }
         actions={
-          <span className="flex items-center gap-sm">
-            <Link href={`/purchase-returns/${record.id}/print`}>
-              <Button variant="secondary" size="sm">
-                طباعة
-              </Button>
-            </Link>
-            {isDraft ? (
-              <Link href={`/purchase-returns/${record.id}/edit`}>
-                <Button variant="secondary" size="sm">
-                  تعديل
-                </Button>
-              </Link>
-            ) : null}
-          </span>
+          <DocumentActionBar
+            actions={[
+              {
+                key: 'print',
+                label: 'طباعة',
+                icon: <PrinterIcon />,
+                variant: 'outline',
+                onSelect: () => router.push(`/purchase-returns/${record.id}/print`),
+              },
+              ...(isDraft
+                ? [
+                    {
+                      key: 'edit',
+                      label: 'تعديل',
+                      icon: <PencilIcon />,
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/purchase-returns/${record.id}/edit`),
+                    },
+                  ]
+                : []),
+              {
+                key: 'attachments',
+                label: 'المرفقات',
+                icon: <PaperclipIcon />,
+                overflow: true,
+                onSelect: () =>
+                  document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
+              },
+            ]}
+          />
         }
       >
         <dl className="grid grid-cols-1 gap-md md:grid-cols-3">
@@ -193,10 +212,12 @@ export function ReturnDetail({ returnId }: ReturnDetailProps) {
         </p>
       </Card>
 
-      <AttachmentsSection
-        owner={{ type: AttachmentOwnerTypes.PurchaseReturn, id: record.id }}
-        allowDelete={isDraft}
-      />
+      <div id="attachments" className="scroll-mt-md">
+        <AttachmentsSection
+          owner={{ type: AttachmentOwnerTypes.PurchaseReturn, id: record.id }}
+          allowDelete={isDraft}
+        />
+      </div>
     </PageLayout>
   );
 }

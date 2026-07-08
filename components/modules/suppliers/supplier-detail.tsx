@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
@@ -8,7 +7,20 @@ import { getSupplierService, SupplierStatus, type Supplier } from '@/lib/modules
 import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
-import { Button, Card, ConfirmDialog, ErrorState, Skeleton, StatusBadge, useToast } from '../../ui';
+import {
+  Card,
+  ConfirmDialog,
+  DocumentActionBar,
+  ErrorState,
+  InboxIcon,
+  PaperclipIcon,
+  PencilIcon,
+  PlusIcon,
+  RotateIcon,
+  Skeleton,
+  StatusBadge,
+  useToast,
+} from '../../ui';
 
 /**
  * SupplierDetail — screen S-11 (info scope). Header card with identity,
@@ -114,27 +126,44 @@ export function SupplierDetail({ supplierId }: SupplierDetailProps) {
           </span>
         }
         actions={
-          <>
-            {isActive ? (
-              <Link href={`/payments/new?supplier=${supplier.id}`}>
-                <Button variant="secondary" size="sm">
-                  دفع
-                </Button>
-              </Link>
-            ) : null}
-            <Link href={`/suppliers/${supplier.id}/edit`}>
-              <Button variant="secondary" size="sm">
-                تعديل
-              </Button>
-            </Link>
-            <Button
-              variant={isActive ? 'ghost' : 'secondary'}
-              size="sm"
-              onClick={() => setConfirming(true)}
-            >
-              {isActive ? 'أرشفة' : 'إعادة تنشيط'}
-            </Button>
-          </>
+          <DocumentActionBar
+            actions={[
+              ...(isActive
+                ? [
+                    {
+                      key: 'pay',
+                      label: 'دفع',
+                      icon: <PlusIcon />,
+                      variant: 'outline' as const,
+                      onSelect: () => router.push(`/payments/new?supplier=${supplier.id}`),
+                    },
+                  ]
+                : []),
+              {
+                key: 'edit',
+                label: 'تعديل',
+                icon: <PencilIcon />,
+                variant: 'secondary',
+                onSelect: () => router.push(`/suppliers/${supplier.id}/edit`),
+              },
+              {
+                key: 'attachments',
+                label: 'المرفقات',
+                icon: <PaperclipIcon />,
+                overflow: true,
+                onSelect: () =>
+                  document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
+              },
+              {
+                key: 'toggle',
+                label: isActive ? 'أرشفة' : 'إعادة تنشيط',
+                icon: isActive ? <InboxIcon /> : <RotateIcon />,
+                variant: isActive ? 'danger' : 'secondary',
+                overflow: true,
+                onSelect: () => setConfirming(true),
+              },
+            ]}
+          />
         }
       >
         <dl className="grid grid-cols-1 gap-md md:grid-cols-2">
@@ -155,10 +184,12 @@ export function SupplierDetail({ supplierId }: SupplierDetailProps) {
         </dl>
       </Card>
 
-      <AttachmentsSection
-        owner={{ type: AttachmentOwnerTypes.Supplier, id: supplier.id }}
-        allowDelete={false}
-      />
+      <div id="attachments" className="scroll-mt-md">
+        <AttachmentsSection
+          owner={{ type: AttachmentOwnerTypes.Supplier, id: supplier.id }}
+          allowDelete={false}
+        />
+      </div>
 
       <ConfirmDialog
         open={confirming}

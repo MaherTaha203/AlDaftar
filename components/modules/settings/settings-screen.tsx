@@ -20,11 +20,58 @@ import { Button, Field, FormSkeleton, Input } from '@/components/ui';
  */
 const MAX_LOGO_BYTES = 512 * 1024;
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** The settings sections, in order — drives both the index and the anchors. */
+const SECTIONS = [
+  { id: 'company', title: 'ملف الشركة' },
+  { id: 'currency', title: 'العملة' },
+  { id: 'numbering', title: 'الترقيم والعرض' },
+  { id: 'display', title: 'تفضيلات العرض' },
+  { id: 'backup', title: 'المرفقات والنسخ الاحتياطي' },
+] as const;
+
+/** Sticky index so a settings page reads as a premium console, not a long list. */
+function SectionIndex() {
   return (
-    <section className="rounded-lg border border-neutral-200 bg-white shadow-sm">
-      <h2 className="border-b border-neutral-200 px-lg py-md text-sm font-semibold text-neutral-500">
+    <nav
+      aria-label="أقسام الإعدادات"
+      className="sticky top-md flex h-max flex-col gap-xs rounded-lg border border-neutral-200 bg-white p-sm shadow-sm max-lg:hidden"
+    >
+      {SECTIONS.map((section) => (
+        <a
+          key={section.id}
+          href={`#${section.id}`}
+          className="rounded-md px-sm py-xs text-sm text-neutral-500 transition-colors hover:bg-primary/[0.06] hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          {section.title}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function Section({
+  id,
+  title,
+  locked = false,
+  children,
+}: {
+  id: string;
+  title: string;
+  locked?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className="scroll-mt-md rounded-lg border border-neutral-200 bg-white shadow-sm"
+    >
+      <h2 className="flex items-center justify-between gap-sm border-b border-neutral-200 px-lg py-md text-sm font-semibold text-neutral-500">
         {title}
+        {locked ? (
+          <span className="rounded-full bg-[color-mix(in_srgb,var(--color-copper)_14%,transparent)] px-sm py-0.5 text-[11px] font-medium text-copper">
+            قرار مقفل
+          </span>
+        ) : null}
       </h2>
       <div className="flex flex-col gap-md p-lg">{children}</div>
     </section>
@@ -99,106 +146,109 @@ export function SettingsScreen() {
   }
 
   return (
-    <PageLayout title="الإعدادات">
-      <div className="flex flex-col gap-lg">
-        <Section title="ملف الشركة">
-          <Field label="اسم الشركة">
-            <Input
-              value={profile.companyName}
-              onChange={(e) => set('companyName', e.target.value)}
-              placeholder="اسم الشركة كما يظهر على المطبوعات"
-            />
-          </Field>
-          <Field label="العنوان">
-            <Input value={profile.address} onChange={(e) => set('address', e.target.value)} />
-          </Field>
-          <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
-            <Field label="الهاتف">
-              <Input value={profile.phone} onChange={(e) => set('phone', e.target.value)} />
-            </Field>
-            <Field label="الرقم الضريبي / السجل">
+    <PageLayout title="الإعدادات" description="ملف الشركة، القرارات المعتمدة، وتفضيلات العرض.">
+      <div className="grid gap-lg lg:grid-cols-[200px_1fr]">
+        <SectionIndex />
+        <div className="flex min-w-0 flex-col gap-lg">
+          <Section id="company" title="ملف الشركة">
+            <Field label="اسم الشركة">
               <Input
-                value={profile.taxReference}
-                onChange={(e) => set('taxReference', e.target.value)}
+                value={profile.companyName}
+                onChange={(e) => set('companyName', e.target.value)}
+                placeholder="اسم الشركة كما يظهر على المطبوعات"
               />
             </Field>
-          </div>
-
-          <div className="flex flex-col gap-xs">
-            <span className="text-sm font-medium text-neutral-700">الشعار (للطباعة)</span>
-            <div className="flex items-center gap-md">
-              {profile.logoDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.logoDataUrl}
-                  alt="شعار الشركة"
-                  className="h-16 w-16 rounded-md border border-neutral-200 object-contain"
+            <Field label="العنوان">
+              <Input value={profile.address} onChange={(e) => set('address', e.target.value)} />
+            </Field>
+            <div className="grid grid-cols-1 gap-md sm:grid-cols-2">
+              <Field label="الهاتف">
+                <Input value={profile.phone} onChange={(e) => set('phone', e.target.value)} />
+              </Field>
+              <Field label="الرقم الضريبي / السجل">
+                <Input
+                  value={profile.taxReference}
+                  onChange={(e) => set('taxReference', e.target.value)}
                 />
-              ) : null}
-              <input
-                type="file"
-                accept="image/*"
-                aria-label="اختيار ملف الشعار"
-                onChange={onLogoChange}
-                className="text-sm"
-              />
-              {profile.logoDataUrl ? (
-                <Button variant="secondary" size="sm" onClick={() => set('logoDataUrl', '')}>
-                  إزالة
-                </Button>
-              ) : null}
+              </Field>
             </div>
-            {logoError ? <p className="text-sm text-danger">{logoError}</p> : null}
-          </div>
 
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          <div className="flex items-center gap-md">
-            <Button onClick={() => void onSave()} loading={saving}>
-              حفظ
-            </Button>
-            {saved ? <span className="text-sm text-success">تم الحفظ</span> : null}
-          </div>
-        </Section>
-
-        <Section title="العملة">
-          <ReadOnlyRow
-            label="عملة الدفتر"
-            value={`${BOOK_CURRENCY.code} (${BOOK_CURRENCY.symbol})`}
-          />
-          <ReadOnlyRow label="المنازل العشرية" value={String(BOOK_CURRENCY.precision)} />
-          <ReadOnlyRow label="التقريب" value="نصفي للأعلى" />
-          <p className="text-xs text-neutral-400">
-            قرار معتمد (BDD-006) — غير قابل للتغيير في هذه النسخة.
-          </p>
-        </Section>
-
-        <Section title="الترقيم والعرض">
-          <ReadOnlyRow label="ترقيم المستندات" value="تسلسل رقمي مستقل لكل نوع، يبدأ من 1" />
-          <ReadOnlyRow label="الأرقام" value="أرقام لاتينية (0-9)" />
-          <ReadOnlyRow label="التاريخ" value="يوم/شهر/سنة (DD/MM/YYYY)" />
-          <p className="text-xs text-neutral-400">
-            قرارات معتمدة (BDD-005 / BDR-17 / BDR-18) — ثابتة في هذه النسخة.
-          </p>
-        </Section>
-
-        <Section title="تفضيلات العرض">
-          <div className="flex flex-wrap items-center justify-between gap-md">
             <div className="flex flex-col gap-xs">
-              <span className="text-sm font-medium text-neutral-700">كثافة الواجهة</span>
-              <span className="text-xs text-neutral-400">
-                يضبط المسافات وارتفاع صفوف الجداول وحجم عناصر الإدخال — يُحفظ لكل جهاز.
-              </span>
+              <span className="text-sm font-medium text-neutral-700">الشعار (للطباعة)</span>
+              <div className="flex items-center gap-md">
+                {profile.logoDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.logoDataUrl}
+                    alt="شعار الشركة"
+                    className="h-16 w-16 rounded-md border border-neutral-200 object-contain"
+                  />
+                ) : null}
+                <input
+                  type="file"
+                  accept="image/*"
+                  aria-label="اختيار ملف الشعار"
+                  onChange={onLogoChange}
+                  className="text-sm"
+                />
+                {profile.logoDataUrl ? (
+                  <Button variant="secondary" size="sm" onClick={() => set('logoDataUrl', '')}>
+                    إزالة
+                  </Button>
+                ) : null}
+              </div>
+              {logoError ? <p className="text-sm text-danger">{logoError}</p> : null}
             </div>
-            <DensityControl />
-          </div>
-        </Section>
 
-        <Section title="المرفقات والنسخ الاحتياطي">
-          <p className="text-sm text-neutral-500">
-            حدود المرفقات (BDR-08) وسياسة النسخ الاحتياطي (BDR-12) بانتظار قرار المالك، ولم تُفعَّل
-            خيارات التحكم بها بعد.
-          </p>
-        </Section>
+            {error ? <p className="text-sm text-danger">{error}</p> : null}
+            <div className="flex items-center gap-md">
+              <Button onClick={() => void onSave()} loading={saving}>
+                حفظ
+              </Button>
+              {saved ? <span className="text-sm text-success">تم الحفظ</span> : null}
+            </div>
+          </Section>
+
+          <Section id="currency" title="العملة" locked>
+            <ReadOnlyRow
+              label="عملة الدفتر"
+              value={`${BOOK_CURRENCY.code} (${BOOK_CURRENCY.symbol})`}
+            />
+            <ReadOnlyRow label="المنازل العشرية" value={String(BOOK_CURRENCY.precision)} />
+            <ReadOnlyRow label="التقريب" value="نصفي للأعلى" />
+            <p className="text-xs text-neutral-400">
+              قرار معتمد (BDD-006) — غير قابل للتغيير في هذه النسخة.
+            </p>
+          </Section>
+
+          <Section id="numbering" title="الترقيم والعرض" locked>
+            <ReadOnlyRow label="ترقيم المستندات" value="تسلسل رقمي مستقل لكل نوع، يبدأ من 1" />
+            <ReadOnlyRow label="الأرقام" value="أرقام لاتينية (0-9)" />
+            <ReadOnlyRow label="التاريخ" value="يوم/شهر/سنة (DD/MM/YYYY)" />
+            <p className="text-xs text-neutral-400">
+              قرارات معتمدة (BDD-005 / BDR-17 / BDR-18) — ثابتة في هذه النسخة.
+            </p>
+          </Section>
+
+          <Section id="display" title="تفضيلات العرض">
+            <div className="flex flex-wrap items-center justify-between gap-md">
+              <div className="flex flex-col gap-xs">
+                <span className="text-sm font-medium text-neutral-700">كثافة الواجهة</span>
+                <span className="text-xs text-neutral-400">
+                  يضبط المسافات وارتفاع صفوف الجداول وحجم عناصر الإدخال — يُحفظ لكل جهاز.
+                </span>
+              </div>
+              <DensityControl />
+            </div>
+          </Section>
+
+          <Section id="backup" title="المرفقات والنسخ الاحتياطي">
+            <p className="text-sm text-neutral-500">
+              حدود المرفقات (BDR-08) وسياسة النسخ الاحتياطي (BDR-12) بانتظار قرار المالك، ولم
+              تُفعَّل خيارات التحكم بها بعد.
+            </p>
+          </Section>
+        </div>
       </div>
     </PageLayout>
   );

@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { getProductService, type Product } from '@/lib/modules/products';
@@ -20,13 +19,17 @@ import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
-  Button,
   Card,
   DataTable,
+  DocumentActionBar,
   DocumentStatus,
   ErrorState,
   MissingInvoiceBadge,
   MoneyDisplay,
+  PaperclipIcon,
+  PencilIcon,
+  PrinterIcon,
+  RotateIcon,
   Skeleton,
   formatDate,
   type DataTableColumn,
@@ -135,26 +138,44 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
           </span>
         }
         actions={
-          <span className="flex items-center gap-sm">
-            <Link href={`/purchases/${purchase.id}/print`}>
-              <Button variant="secondary" size="sm">
-                طباعة
-              </Button>
-            </Link>
-            {isDraft ? (
-              <Link href={`/purchases/${purchase.id}/edit`}>
-                <Button variant="secondary" size="sm">
-                  تعديل
-                </Button>
-              </Link>
-            ) : (
-              <Link href={`/purchase-returns/new?purchase=${purchase.id}`}>
-                <Button variant="secondary" size="sm">
-                  إنشاء مرتجع
-                </Button>
-              </Link>
-            )}
-          </span>
+          <DocumentActionBar
+            actions={[
+              {
+                key: 'print',
+                label: 'طباعة',
+                icon: <PrinterIcon />,
+                variant: 'outline',
+                onSelect: () => router.push(`/purchases/${purchase.id}/print`),
+              },
+              ...(isDraft
+                ? [
+                    {
+                      key: 'edit',
+                      label: 'تعديل',
+                      icon: <PencilIcon />,
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/purchases/${purchase.id}/edit`),
+                    },
+                  ]
+                : [
+                    {
+                      key: 'return',
+                      label: 'إنشاء مرتجع',
+                      icon: <RotateIcon />,
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/purchase-returns/new?purchase=${purchase.id}`),
+                    },
+                  ]),
+              {
+                key: 'attachments',
+                label: 'المرفقات',
+                icon: <PaperclipIcon />,
+                overflow: true,
+                onSelect: () =>
+                  document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
+              },
+            ]}
+          />
         }
       >
         <dl className="grid grid-cols-1 gap-md md:grid-cols-3">
@@ -200,10 +221,12 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
         </p>
       </Card>
 
-      <AttachmentsSection
-        owner={{ type: AttachmentOwnerTypes.Purchase, id: purchase.id }}
-        allowDelete={isDraft}
-      />
+      <div id="attachments" className="scroll-mt-md">
+        <AttachmentsSection
+          owner={{ type: AttachmentOwnerTypes.Purchase, id: purchase.id }}
+          allowDelete={isDraft}
+        />
+      </div>
     </PageLayout>
   );
 }

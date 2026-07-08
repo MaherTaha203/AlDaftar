@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -16,11 +15,14 @@ import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
-  Button,
   Card,
+  DocumentActionBar,
   DocumentStatus,
   ErrorState,
   MoneyDisplay,
+  PaperclipIcon,
+  PencilIcon,
+  PrinterIcon,
   Skeleton,
   formatDate,
 } from '../../ui';
@@ -91,20 +93,36 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
           </span>
         }
         actions={
-          <span className="flex items-center gap-sm">
-            <Link href={`/payments/${payment.id}/print`}>
-              <Button variant="secondary" size="sm">
-                طباعة
-              </Button>
-            </Link>
-            {isDraft ? (
-              <Link href={`/payments/${payment.id}/edit`}>
-                <Button variant="secondary" size="sm">
-                  تعديل
-                </Button>
-              </Link>
-            ) : null}
-          </span>
+          <DocumentActionBar
+            actions={[
+              {
+                key: 'print',
+                label: 'طباعة',
+                icon: <PrinterIcon />,
+                variant: 'outline',
+                onSelect: () => router.push(`/payments/${payment.id}/print`),
+              },
+              ...(isDraft
+                ? [
+                    {
+                      key: 'edit',
+                      label: 'تعديل',
+                      icon: <PencilIcon />,
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/payments/${payment.id}/edit`),
+                    },
+                  ]
+                : []),
+              {
+                key: 'attachments',
+                label: 'المرفقات',
+                icon: <PaperclipIcon />,
+                overflow: true,
+                onSelect: () =>
+                  document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
+              },
+            ]}
+          />
         }
       >
         <dl className="grid grid-cols-1 gap-md md:grid-cols-3">
@@ -164,10 +182,12 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
         </dl>
       </Card>
 
-      <AttachmentsSection
-        owner={{ type: AttachmentOwnerTypes.Payment, id: payment.id }}
-        allowDelete={isDraft}
-      />
+      <div id="attachments" className="scroll-mt-md">
+        <AttachmentsSection
+          owner={{ type: AttachmentOwnerTypes.Payment, id: payment.id }}
+          allowDelete={isDraft}
+        />
+      </div>
     </PageLayout>
   );
 }
