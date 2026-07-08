@@ -28,7 +28,7 @@ function returnLabel(record: PurchaseReturn): string {
  */
 export type PurchaseReturnRepository = Pick<
   LocalRecordStore<PurchaseReturn>,
-  'findAll' | 'findById' | 'create' | 'update'
+  'findAll' | 'findById' | 'create' | 'update' | 'remove'
 >;
 
 export function getPurchaseReturnRepository(): PurchaseReturnRepository {
@@ -211,6 +211,28 @@ export class PurchaseReturnService extends ApplicationService {
         after: posted,
       });
       return posted;
+    });
+  }
+
+  /**
+   * Delete a DRAFT return. Posted documents are immutable and never deleted
+   * (continuous numbering + append-only audit); the guard enforces this even
+   * though the UI also disables the action. A draft has no number and no
+   * ledger effect, so its removal is accounting-safe — and audited.
+   */
+  deleteDraft(id: string): AsyncResult<void> {
+    return this.execute('purchase-returns.deleteDraft', async () => {
+      const record = await this.require(id);
+      this.assertDraft(record);
+      this.unwrap(await this.repository.remove(id));
+      await getAuditService().record({
+        action: AuditAction.Delete,
+        entityType: 'purchase-returns',
+        entityId: id,
+        entityLabel: returnLabel(record),
+        summary: 'حذف مسودة مرتجع',
+        before: record,
+      });
     });
   }
 

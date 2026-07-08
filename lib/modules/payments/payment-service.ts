@@ -25,7 +25,7 @@ function paymentLabel(payment: Payment): string {
  */
 export type PaymentRepository = Pick<
   LocalRecordStore<Payment>,
-  'findAll' | 'findById' | 'create' | 'update'
+  'findAll' | 'findById' | 'create' | 'update' | 'remove'
 >;
 
 export function getPaymentRepository(): PaymentRepository {
@@ -151,6 +151,29 @@ export class PaymentService extends ApplicationService {
         after: posted,
       });
       return posted;
+    });
+  }
+
+  /**
+   * Delete a DRAFT payment. Posted documents are immutable and are NEVER
+   * deleted (continuous numbering + append-only audit); the guard enforces
+   * this at the service even though the UI also disables the action. A draft
+   * carries no number and no ledger effect, so its removal is
+   * accounting-safe — and still recorded in the audit trail.
+   */
+  deleteDraft(id: string): AsyncResult<void> {
+    return this.execute('payments.deleteDraft', async () => {
+      const payment = await this.require(id);
+      this.assertDraft(payment);
+      this.unwrap(await this.repository.remove(id));
+      await getAuditService().record({
+        action: AuditAction.Delete,
+        entityType: 'payments',
+        entityId: id,
+        entityLabel: paymentLabel(payment),
+        summary: 'حذف مسودة دفعة',
+        before: payment,
+      });
     });
   }
 

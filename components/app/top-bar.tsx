@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from 'react';
 import {
   BellIcon,
   Dialog,
+  DownloadIcon,
   GearIcon,
   HelpIcon,
   PlusIcon,
@@ -13,6 +14,7 @@ import {
   Menu,
   cn,
 } from '../ui';
+import { backupStore, backupAgo } from './backup-store';
 import { commandPalette, shortcutGuide } from './overlay-store';
 import { notifications, unreadCount, type NotificationKind } from './notifications-store';
 
@@ -171,6 +173,32 @@ export function SystemCenter() {
         </div>
       </Dialog>
     </>
+  );
+}
+
+/** Backup status — reflects the real last download; opens the Backup Center. */
+export function BackupStatus() {
+  const router = useRouter();
+  const last = useSyncExternalStore(
+    backupStore.subscribe,
+    backupStore.getSnapshot,
+    backupStore.getServerSnapshot,
+  );
+  return (
+    <button
+      type="button"
+      onClick={() => router.push('/settings')}
+      title="النسخ الاحتياطي — آخر نسخة"
+      className={cn(
+        'inline-flex h-8 items-center gap-2 rounded-full border border-neutral-200 bg-white px-3',
+        'text-xs text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-700',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        'max-lg:hidden',
+      )}
+    >
+      <DownloadIcon width={13} height={13} className={last ? 'text-success' : 'text-neutral-400'} />
+      <span className="tabular-nums">{backupAgo(last, Date.now())}</span>
+    </button>
   );
 }
 

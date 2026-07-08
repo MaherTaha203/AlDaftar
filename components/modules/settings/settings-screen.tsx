@@ -10,6 +10,7 @@ import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { DensityControl, PageLayout } from '@/components/app';
 import { useOperation } from '@/components/framework';
 import { Button, Field, FormSkeleton, Input } from '@/components/ui';
+import { BackupCenter } from './backup-center';
 
 /**
  * SettingsScreen — screen S-70 (01_System_Workflow.md §7). v1 delivers the
@@ -26,7 +27,7 @@ const SECTIONS = [
   { id: 'currency', title: 'العملة' },
   { id: 'numbering', title: 'الترقيم والعرض' },
   { id: 'display', title: 'تفضيلات العرض' },
-  { id: 'backup', title: 'المرفقات والنسخ الاحتياطي' },
+  { id: 'backup', title: 'النسخ الاحتياطي' },
 ] as const;
 
 /** Sticky index so a settings page reads as a premium console, not a long list. */
@@ -242,10 +243,10 @@ export function SettingsScreen() {
             </div>
           </Section>
 
-          <Section id="backup" title="المرفقات والنسخ الاحتياطي">
-            <p className="text-sm text-neutral-500">
-              حدود المرفقات (BDR-08) وسياسة النسخ الاحتياطي (BDR-12) بانتظار قرار المالك، ولم
-              تُفعَّل خيارات التحكم بها بعد.
+          <Section id="backup" title="النسخ الاحتياطي">
+            <BackupCenter />
+            <p className="text-xs text-neutral-400">
+              حدود المرفقات (BDR-08) بانتظار قرار المالك ولم تُفعَّل خياراتها بعد.
             </p>
           </Section>
         </div>

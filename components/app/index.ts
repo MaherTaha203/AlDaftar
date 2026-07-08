@@ -22,3 +22,5 @@ export { useShortcut } from './use-shortcut';
 export { type ShortcutAction } from './shortcut-registry';
 export { focusMode } from './focus-store';
 export { FocusToggle } from './focus-toggle';
+export { notifications, unreadCount, type AppNotification } from './notifications-store';
+export { backupStore, backupAgo, LAST_BACKUP_KEY } from './backup-store';

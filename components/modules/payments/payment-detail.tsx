@@ -16,6 +16,7 @@ import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
   Card,
+  ConfirmDialog,
   DocumentActionBar,
   DocumentStatus,
   ErrorState,
@@ -24,7 +25,9 @@ import {
   PencilIcon,
   PrinterIcon,
   Skeleton,
+  TrashIcon,
   formatDate,
+  useToast,
 } from '../../ui';
 
 /**
@@ -38,11 +41,25 @@ export interface PaymentDetailProps {
 
 export function PaymentDetail({ paymentId }: PaymentDetailProps) {
   const router = useRouter();
+  const toast = useToast();
   const [payment, setPayment] = useState<Payment | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { run: load, error } = useOperation((id: string) => getPaymentService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
+  const del = useOperation((id: string) => getPaymentService().deleteDraft(id));
+
+  async function handleDelete() {
+    const result = await del.run(paymentId);
+    setConfirmDelete(false);
+    if (result.ok) {
+      toast.show({ variant: 'success', message: 'تم حذف المسودة' });
+      router.push('/payments');
+    } else {
+      toast.show({ variant: 'error', message: del.error ?? 'تعذّر حذف المسودة' });
+    }
+  }
 
   useEffect(() => {
     void load(paymentId).then((r) => r.ok && setPayment(r.value));
@@ -57,6 +74,7 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
     () => router.push(`/payments/${paymentId}/edit`),
     payment?.status === PaymentStatus.Draft,
   );
+  useShortcut('delete', () => setConfirmDelete(true), payment?.status === PaymentStatus.Draft);
 
   if (error !== null) {
     return (
@@ -120,6 +138,17 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
                 overflow: true,
                 onSelect: () =>
                   document.getElementById('attachments')?.scrollIntoView({ behavior: 'smooth' }),
+              },
+              {
+                key: 'delete',
+                label: 'حذف',
+                icon: <TrashIcon />,
+                variant: isDraft ? 'danger' : 'secondary',
+                disabled: !isDraft,
+                disabledReason: isDraft
+                  ? undefined
+                  : 'لا يمكن حذف مستند مرحّل — الدفتر سجلّ محاسبي غير قابل للتعديل. استخدم الإبطال مستقبلًا.',
+                onSelect: () => setConfirmDelete(true),
               },
             ]}
           />
@@ -188,6 +217,19 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
           allowDelete={isDraft}
         />
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="حذف مسودة الدفعة"
+        confirmLabel="حذف نهائيًا"
+        danger
+        busy={del.pending}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setConfirmDelete(false)}
+      >
+        سيُحذف هذا المستند المسودة نهائيًا ولا يمكن التراجع. المسودّات لا تحمل رقمًا ولا أثرًا في
+        الدفتر، لذا الحذف آمن محاسبيًا — وسيُسجَّل في سجل التدقيق.
+      </ConfirmDialog>
     </PageLayout>
   );
 }
