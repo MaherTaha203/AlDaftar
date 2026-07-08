@@ -111,6 +111,7 @@ export function ReturnsList() {
   return (
     <>
       <ListPage
+        description="مرتجعات الشراء المرتبطة بالفواتير."
         onNew={() => router.push('/purchase-returns/new')}
         primaryAction={
           <Link href="/purchase-returns/new">

@@ -29,6 +29,8 @@ export interface PageLayoutProps {
   breadcrumb?: readonly BreadcrumbItem[];
   /** Title-row actions at the inline end (e.g. a primary Button). */
   actions?: ReactNode;
+  /** Optional one-line page description under the title (Visual Identity #16). */
+  description?: ReactNode;
   /** Toolbar above the content (search / filters), per 03 §1. */
   toolbar?: ReactNode;
   /** Footer below the content (e.g. Pagination). */
@@ -41,6 +43,7 @@ export function PageLayout({
   leafLabel,
   breadcrumb,
   actions,
+  description,
   toolbar,
   footer,
   children,
@@ -53,6 +56,7 @@ export function PageLayout({
     <PageContainer
       title={heading}
       actions={actions}
+      description={description}
       breadcrumb={items.length > 0 ? <Breadcrumb items={items} /> : undefined}
     >
       {toolbar}

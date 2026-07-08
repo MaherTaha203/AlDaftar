@@ -162,6 +162,7 @@ export function PurchasesList() {
   return (
     <>
       <ListPage
+        description="فواتير الشراء — مسودّات ومستندات مرحّلة."
         onNew={() => router.push('/purchases/new')}
         primaryAction={
           <Link href="/purchases/new">
