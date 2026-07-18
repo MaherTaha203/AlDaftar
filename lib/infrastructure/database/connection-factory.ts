@@ -26,18 +26,72 @@ class SupabaseDatabaseClient implements IDatabaseClient {
 
 let cached: IDatabaseClient | undefined;
 
+/**
+ * "Remember me" preference key. The login screen sets it BEFORE sign-in via
+ * `setRememberSession`; the storage adapter below reads it to decide where the
+ * Supabase session token lives: localStorage (persists across browser restarts)
+ * when remembered, sessionStorage (cleared when the browser/tab closes) when
+ * not. Default (key absent) is remembered, preserving the prior behavior.
+ */
+const REMEMBER_KEY = 'aldaftar.remember-session';
+
+/** Records the admin's "remember me" choice for the next sign-in. */
+export function setRememberSession(remember: boolean): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.setItem(REMEMBER_KEY, remember ? 'true' : 'false');
+}
+
+/**
+ * Storage adapter that honors the "remember me" choice. Reads fall back across
+ * both stores so an in-progress session survives a page refresh either way;
+ * writes go to localStorage when remembered and sessionStorage otherwise (and
+ * clear the other store so a session never lingers in the wrong place).
+ */
+function rememberAwareStorage(): {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+} {
+  return {
+    getItem(key) {
+      return window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
+    },
+    setItem(key, value) {
+      if (window.localStorage.getItem(REMEMBER_KEY) === 'false') {
+        window.sessionStorage.setItem(key, value);
+        window.localStorage.removeItem(key);
+      } else {
+        window.localStorage.setItem(key, value);
+        window.sessionStorage.removeItem(key);
+      }
+    },
+    removeItem(key) {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    },
+  };
+}
+
 export const ConnectionFactory = Object.freeze({
   /** Returns the shared database client, creating it on first call. */
   getClient(): IDatabaseClient {
     if (cached === undefined) {
       const { url, anonKey } = infrastructureConfig.database;
-      // Single-administrator auth with "remember me" (owner decision,
-      // 2026-07-05): the session persists on the device and refreshes itself,
-      // so the admin signs in once and stays signed in until explicit
-      // sign-out. RLS (migration 0002) requires this session for all data.
+      // Single-administrator auth with a real "remember me" (owner decision,
+      // 2026-07-05): the session refreshes itself and — per the admin's choice
+      // at sign-in — either persists on the device (localStorage) or lasts only
+      // until the browser closes (sessionStorage), via the storage adapter
+      // above. RLS (migration 0002) requires this session for all data. On the
+      // server there is no window, so the client uses its default storage.
       cached = new SupabaseDatabaseClient(
         createClient(url, anonKey, {
-          auth: { persistSession: true, autoRefreshToken: true },
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            ...(typeof window === 'undefined' ? {} : { storage: rememberAwareStorage() }),
+          },
         }),
       );
     }

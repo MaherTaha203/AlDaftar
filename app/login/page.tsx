@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { getCurrentUser, signIn } from '@/lib/infrastructure';
+import { getCurrentUser, setRememberSession, signIn } from '@/lib/infrastructure';
 import { AuditAction, getAuditService } from '@/lib/modules/audit';
 import { Button, Field, Input, uiText } from '@/components/ui';
 // Persistence must be registered in THIS page's module graph too: /login sits
@@ -13,16 +13,22 @@ import { Button, Field, Input, uiText } from '@/components/ui';
 import '@/components/app/persistence-bootstrap';
 
 /**
- * Login — the single-administrator sign-in screen (owner decision,
- * 2026-07-05): email + password only; no registration, no reset, no roles.
- * Sessions persist on the device ("remember me"), so this screen appears
- * once per device until the admin explicitly signs out. Outside the (app)
- * shell — no sidebar/header chrome.
+ * Login — the single-administrator sign-in screen (owner decision, 2026-07-05):
+ * email + password only; no registration, no reset, no roles. There is
+ * deliberately no "forgot password" — recovery is via the Supabase dashboard
+ * (single-admin design).
+ *
+ * Optimized for PERCEIVED SPEED: renders instantly, no entrance or background
+ * animation, no backdrop blur — a static gradient and only fast (≤150ms) CSS
+ * micro-interactions on inputs and the button (which respect
+ * prefers-reduced-motion via the design-system components). Beauty comes from
+ * type, spacing, and proportion, not motion.
  */
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +45,9 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
     setPending(true);
+    // Record the choice BEFORE sign-in so the session token is written to the
+    // right store (localStorage when remembered, sessionStorage otherwise).
+    setRememberSession(remember);
     const result = await signIn(email.trim(), password);
     if (!result.ok) {
       setPending(false);
@@ -57,60 +66,26 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden p-lg">
-      {/*
-        Dawn Nebula atmosphere — the one expressive surface (approved).
-        Deep emerald night ground with two soft dawn glows that breathe very
-        slowly (18s, low intensity) behind the card; motion stops entirely
-        under prefers-reduced-motion. No particles, no heavy glow.
-      */}
-      <style>{`
-        @keyframes aldaftar-dawn {
-          0%, 100% { opacity: .5; transform: translate3d(0,0,0) scale(1); }
-          50% { opacity: .82; transform: translate3d(0,-2%,0) scale(1.06); }
-        }
-        .aldaftar-aurora { animation: aldaftar-dawn 18s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .aldaftar-aurora { animation: none; opacity: .68; }
-        }
-      `}</style>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background: 'linear-gradient(160deg, #0a1a16 0%, #0c211c 55%, #101a20 100%)',
-        }}
-      >
-        <div
-          className="aldaftar-aurora absolute -top-1/4 start-[-10%] h-[70%] w-[70%] rounded-full blur-3xl"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(232,160,106,0.28), rgba(217,106,123,0.14) 45%, transparent 70%)',
-          }}
-        />
-        <div
-          className="aldaftar-aurora absolute bottom-[-20%] end-[-10%] h-[70%] w-[70%] rounded-full blur-3xl"
-          style={{
-            animationDelay: '-9s',
-            background:
-              'radial-gradient(circle, rgba(20,146,108,0.30), rgba(139,123,216,0.14) 45%, transparent 70%)',
-          }}
-        />
-      </div>
-
+    <main
+      className="flex min-h-dvh items-center justify-center p-lg"
+      style={{
+        // Static premium ground — no motion, no blur (perceived-speed priority).
+        background: 'linear-gradient(160deg, #0a1a16 0%, #0c211c 55%, #101a20 100%)',
+      }}
+    >
       {/* Explicit max width: this project's @theme maps `max-w-sm` to the
-          spacing token (8px), so the named container scale is unusable here. */}
-      <section className="w-full max-w-[24rem] rounded-2xl border border-white/60 bg-white/92 p-xl shadow-[0_20px_60px_rgba(10,26,22,0.45)] backdrop-blur-xl">
+          spacing token, so the named container scale is unusable here. */}
+      <section className="w-full max-w-[24rem] rounded-2xl border border-white/10 bg-white p-xl shadow-[0_18px_50px_rgba(10,26,22,0.35)]">
         <div className="mb-lg flex flex-col items-center gap-xs">
           <span
-            className="flex size-12 items-center justify-center rounded-xl text-2xl font-bold text-white shadow-[0_6px_16px_rgba(12,110,95,0.35)]"
+            className="flex size-14 items-center justify-center rounded-2xl text-3xl font-bold text-white shadow-[0_6px_16px_rgba(12,110,95,0.35)]"
             style={{ background: 'linear-gradient(135deg, #14926c, #0c6b66)' }}
             aria-hidden="true"
           >
             د
           </span>
           <h1 className="text-xl font-bold text-primary">الدفتر</h1>
-          <h2 className="text-sm font-medium text-neutral-400">{uiText.auth.loginTitle}</h2>
+          <p className="text-sm font-medium text-neutral-400">{uiText.auth.subtitle}</p>
         </div>
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-md">
           <Field label={uiText.auth.email} required>
@@ -131,6 +106,15 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
+          <label className="flex cursor-pointer items-center gap-sm text-sm text-neutral-500">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="size-4 accent-primary"
+            />
+            {uiText.auth.rememberMe}
+          </label>
           {error ? (
             <p role="alert" className="text-sm text-danger">
               {error}
