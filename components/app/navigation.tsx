@@ -36,15 +36,32 @@ export const APP_BRAND = 'الدفتر';
 export const navigationGroups: readonly SidebarGroup[] = [
   {
     label: 'عام',
-    items: [{ label: 'لوحة التحكم', href: '/', icon: <DashboardIcon /> }],
+    items: [
+      {
+        label: 'لوحة التحكم',
+        href: '/',
+        icon: <DashboardIcon />,
+        // Promoted to the phone bottom bar (Sidebar Architecture v2): the
+        // daily entry points live on the bar; everything else folds behind
+        // «المزيد». shortLabel fits the bar's compact tiles.
+        mobilePrimary: true,
+        shortLabel: 'الرئيسية',
+      },
+    ],
   },
   {
     label: 'المستندات',
     items: [
-      { label: 'المشتريات', href: '/purchases', icon: <PurchasesIcon /> },
+      { label: 'المشتريات', href: '/purchases', icon: <PurchasesIcon />, mobilePrimary: true },
       { label: 'مرتجعات الشراء', href: '/purchase-returns', icon: <ReturnsIcon /> },
-      { label: 'المدفوعات', href: '/payments', icon: <PaymentsIcon /> },
-      { label: 'سندات استلام البضاعة', href: '/custody', icon: <CustodyIcon /> },
+      { label: 'المدفوعات', href: '/payments', icon: <PaymentsIcon />, mobilePrimary: true },
+      {
+        label: 'سندات استلام البضاعة',
+        href: '/custody',
+        icon: <CustodyIcon />,
+        mobilePrimary: true,
+        shortLabel: 'الاستلام',
+      },
     ],
   },
   {

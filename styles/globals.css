@@ -191,3 +191,27 @@ html {
   animation-duration: 0.32s;
   animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
 }
+
+/*
+ * The phone fold («المزيد» sheet, see BottomNav) — a slab of the workspace
+ * surface rising politely over the solid. Small, quiet, ease-out; reduced
+ * motion gets an instant sheet.
+ */
+@keyframes sheet-rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.sheet-rise {
+  animation: sheet-rise 0.24s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-rise {
+    animation: none;
+  }
+}
