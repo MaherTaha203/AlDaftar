@@ -20,6 +20,8 @@ import {
   DocumentActionBar,
   ErrorState,
   PencilIcon,
+  PrinterIcon,
+  RotateIcon,
   Skeleton,
   TrashIcon,
   formatDate,
@@ -27,13 +29,15 @@ import {
   type DataTableColumn,
 } from '../../ui';
 import { CustodyStatusBadge, ReturnProgress } from './custody-status';
+import { RecordReturnDialog } from './record-return-dialog';
 
 /**
  * CustodyDetail — read view of a custody voucher: header (recipient, phone,
  * issue date, expected return, notes), derived status, and the items table with
  * delivered / returned / remaining per line. Drafts get Edit + Issue + Delete;
- * an issued voucher gets Cancel (only while it has no returns). Recording
- * returns and printing arrive in the next batch.
+ * an issued voucher gets a Print action, "Record Return" (while anything is
+ * outstanding), Cancel (only while it has no returns), and an append-only
+ * return-history timeline.
  */
 export interface CustodyDetailProps {
   custodyId: string;
@@ -53,6 +57,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmIssue, setConfirmIssue] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [showReturn, setShowReturn] = useState(false);
 
   const { run: load, error } = useOperation((id: string) => getCustodyService().basis(id));
   const del = useOperation((id: string) => getCustodyService().deleteDraft(id));
@@ -72,6 +77,11 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
   const isDraft = custody?.status === CustodyStatus.Draft;
   const isIssued = custody?.status === CustodyStatus.Issued;
   const hasReturns = (basis?.returns.length ?? 0) > 0;
+  const hasRemaining = (basis?.balances ?? []).some((b) => b.remaining > 0);
+  const itemName = useMemo(
+    () => new Map((basis?.custody.lines ?? []).map((l) => [l.id, l.item])),
+    [basis],
+  );
 
   useShortcut('edit', () => router.push(`/custody/${custodyId}/edit`), isDraft);
   useShortcut('delete', () => setConfirmDelete(true), isDraft);
@@ -177,6 +187,24 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
         actions={
           <DocumentActionBar
             actions={[
+              {
+                key: 'print',
+                label: 'طباعة',
+                icon: <PrinterIcon />,
+                variant: 'outline' as const,
+                onSelect: () => router.push(`/custody/${custody.id}/print`),
+              },
+              ...(isIssued && hasRemaining
+                ? [
+                    {
+                      key: 'return',
+                      label: 'تسجيل إرجاع',
+                      icon: <RotateIcon />,
+                      variant: 'primary' as const,
+                      onSelect: () => setShowReturn(true),
+                    },
+                  ]
+                : []),
               ...(isDraft
                 ? [
                     {
@@ -209,6 +237,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
                       label: 'إلغاء السند',
                       icon: <CloseIcon />,
                       variant: 'secondary' as const,
+                      overflow: true,
                       disabled: hasReturns,
                       disabledReason: hasReturns
                         ? 'لا يمكن إلغاء سند سُجِّل عليه إرجاع — يجب الحفاظ على السجل. الإلغاء متاح فقط قبل أول إرجاع.'
@@ -276,6 +305,39 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
       <Card title="الأصناف">
         <DataTable columns={lineColumns} rows={basis.balances} rowKey={(b) => b.line.id} />
       </Card>
+
+      {basis.returns.length > 0 ? (
+        <Card title="سجل الإرجاعات">
+          <ol className="flex flex-col gap-md">
+            {basis.returns.map((event) => (
+              <li key={event.id} className="border-s-2 border-neutral-200 ps-md">
+                <div className="text-sm font-medium">
+                  <bdi dir="ltr">{formatDate(event.date)}</bdi>
+                </div>
+                <ul className="mt-xs flex flex-col gap-xs text-sm text-neutral-500">
+                  {event.lines.map((line, index) => (
+                    <li key={`${line.custodyLineId}-${index}`}>
+                      {itemName.get(line.custodyLineId) ?? '—'} —{' '}
+                      <bdi dir="ltr">{line.quantity}</bdi>
+                    </li>
+                  ))}
+                </ul>
+                {event.notes ? (
+                  <p className="mt-xs text-xs text-neutral-400">{event.notes}</p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </Card>
+      ) : null}
+
+      <RecordReturnDialog
+        open={showReturn}
+        custodyId={custody.id}
+        balances={basis.balances}
+        onClose={() => setShowReturn(false)}
+        onRecorded={() => reload()}
+      />
 
       <ConfirmDialog
         open={confirmIssue}
