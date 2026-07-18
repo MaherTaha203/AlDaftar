@@ -26,4 +26,5 @@ export {
   type CustodyBasis,
   type CustodyRepository,
   type CustodyReturnRepository,
+  type CustodySummary,
 } from './custody-service';

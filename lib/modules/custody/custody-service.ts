@@ -7,6 +7,10 @@ import { AuditAction, getAuditService } from '../audit';
 import {
   CustodyStatus,
   lineBalances,
+  presentedStatus,
+  returnProgress,
+  totalDelivered,
+  totalReturned,
   type Custody,
   type CustodyDraftInput,
   type CustodyLine,
@@ -14,6 +18,7 @@ import {
   type CustodyReturn,
   type CustodyReturnInput,
   type CustodyReturnLine,
+  type PresentedCustodyStatus,
 } from './custody';
 
 /** Human reference for a voucher in the audit trail. */
@@ -58,6 +63,18 @@ export interface CustodyBasis {
   readonly balances: readonly CustodyLineBalance[];
 }
 
+/** One list row with its derived status and progress (computed, not stored). */
+export interface CustodySummary {
+  readonly custody: Custody;
+  readonly status: PresentedCustodyStatus;
+  readonly itemCount: number;
+  readonly delivered: number;
+  readonly returned: number;
+  readonly remaining: number;
+  /** Fraction returned, 0..1. */
+  readonly progress: number;
+}
+
 export class CustodyService extends ApplicationService {
   private readonly repository: CustodyRepository;
   private readonly returns: CustodyReturnRepository;
@@ -96,6 +113,44 @@ export class CustodyService extends ApplicationService {
       const custody = await this.require(custodyId);
       const returns = await this.returnsFor(custodyId);
       return { custody, returns, balances: lineBalances(custody, returns) };
+    });
+  }
+
+  /**
+   * List rows with their derived status/progress — the whole list computed from
+   * two reads (all vouchers + all return events), grouped in memory. `today`
+   * (ISO yyyy-mm-dd) is passed in by the caller so "Overdue" stays a pure
+   * derivation with no clock in the domain.
+   */
+  summaries(today: string): AsyncResult<readonly CustodySummary[]> {
+    return this.execute('custody.summaries', async () => {
+      const vouchers = this.unwrap(await this.repository.findAll());
+      const allReturns = this.unwrap(await this.returns.findAll());
+      const byCustody = new Map<string, CustodyReturn[]>();
+      for (const event of allReturns) {
+        const bucket = byCustody.get(event.custodyId);
+        if (bucket === undefined) {
+          byCustody.set(event.custodyId, [event]);
+        } else {
+          bucket.push(event);
+        }
+      }
+      return [...vouchers]
+        .sort((a, b) => b.date.localeCompare(a.date) || b.updatedAt.localeCompare(a.updatedAt))
+        .map((custody): CustodySummary => {
+          const returns = byCustody.get(custody.id) ?? [];
+          const delivered = totalDelivered(custody.lines);
+          const returned = totalReturned(returns);
+          return {
+            custody,
+            status: presentedStatus(custody, returns, today),
+            itemCount: custody.lines.length,
+            delivered,
+            returned,
+            remaining: Math.max(0, delivered - returned),
+            progress: returnProgress(custody, returns),
+          };
+        });
     });
   }
 
