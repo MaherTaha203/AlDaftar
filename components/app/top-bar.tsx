@@ -41,9 +41,10 @@ export function GlobalSearch() {
     >
       <SearchIcon width={15} height={15} className="shrink-0" />
       <span className="truncate">ابحث عن مستند، مورد، منتج…</span>
+      {/* Keyboard hint is meaningless on touch — hide it on phones. */}
       <kbd
         dir="ltr"
-        className="ms-auto rounded-md border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[10.5px] font-medium tabular-nums text-neutral-400"
+        className="ms-auto rounded-md border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[10.5px] font-medium tabular-nums text-neutral-400 max-md:hidden"
       >
         Ctrl K
       </kbd>

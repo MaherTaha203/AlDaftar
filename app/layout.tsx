@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 // Self-hosted Arabic-first face (Royal Emerald typography stage): the exact
 // weights the UI uses — regular, medium, semibold, bold. Served from our own
@@ -12,6 +12,15 @@ import '../styles/print.css';
 
 export const metadata: Metadata = {
   title: 'Al Daftar',
+};
+
+// Explicit, phone-correct viewport (belt-and-suspenders over Next's default):
+// lay out at the true device width, allow the user to zoom (accessibility), and
+// extend under notches. Pages must fit this width — never force it wider.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 // No-flash density init: apply the saved interface-density preset before the
