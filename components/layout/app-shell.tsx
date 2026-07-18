@@ -88,14 +88,16 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
       </dialog>
 
       {/* The workspace — carved out of the emerald solid: inset from the frame
-          on three sides with a large radius, but FLUSH at the rail seam (no
-          margin, no border, no start radius) so the surface is continuous with
-          the carve around the active nav item. Below md the rail is a drawer,
-          so the workspace is full-bleed; on paper it is a plain sheet. */}
+          with the same large radius on ALL corners (a fully rounded slab sunk
+          into the block), yet FLUSH at the rail seam (no margin, no border) so
+          the surface stays continuous with the carve around the active nav
+          item — the seam-side radii only notch the extreme corners, far from
+          where the dock enters. Below md the rail is a drawer, so the
+          workspace is full-bleed; on paper it is a plain sheet. */}
       <div
         className={cn(
           'flex min-w-0 flex-1 flex-col overflow-hidden bg-(--workspace-surface)',
-          'md:my-3.5 md:me-3.5 md:rounded-e-[26px]',
+          'md:my-3.5 md:me-3.5 md:rounded-[26px]',
           'print:m-0 print:overflow-visible print:rounded-none print:bg-white',
         )}
       >

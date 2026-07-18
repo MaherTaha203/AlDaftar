@@ -113,7 +113,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
       className={cn(
         // A face of the emerald solid — flat, calm, and open toward the seam
         // (no inline-end padding/border) so the carve reaches the workspace.
-        'rail-scroll relative flex h-full w-[260px] flex-col gap-md overflow-y-auto py-md pe-0 ps-0',
+        'rail-scroll relative flex h-full w-[236px] flex-col gap-md overflow-y-auto py-md pe-0 ps-0',
         'bg-(--rail-surface)',
         'max-xl:w-16 max-md:w-[260px]',
         className,
