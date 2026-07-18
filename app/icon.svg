@@ -1,15 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- الدفتر — ledger book mark in the theme primary color. -->
-  <rect width="32" height="32" rx="7" fill="#0b5fff" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- الدفتر — «الدال المنحوتة»: the letter د carved from the Royal Emerald
+       tile, with the copper identity dot. Mirrors components/app/brand-mark.tsx
+       (static favicons cannot read CSS tokens — keep in sync). Stroke is a
+       touch thicker than the in-app mark so the د survives 16px rendering. -->
+  <rect width="96" height="96" rx="24" fill="#0c6e5f" />
   <path
-    d="M9 8.5c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v15c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2v-15z"
-    fill="#ffffff"
-  />
-  <path d="M12 6.5h2v19h-2z" fill="#0b5fff" opacity=".25" />
-  <path
-    d="M16 12h5M16 16h5M16 20h3"
-    stroke="#0b5fff"
-    stroke-width="1.6"
+    d="M34 30c14 0 24 8 24 20 0 6-3 11-8 14H27"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="10"
     stroke-linecap="round"
+    stroke-linejoin="round"
   />
+  <circle cx="66" cy="66" r="5" fill="#c98d5a" />
 </svg>

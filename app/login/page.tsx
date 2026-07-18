@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { getCurrentUser, setRememberSession, signIn } from '@/lib/infrastructure';
 import { AuditAction, getAuditService } from '@/lib/modules/audit';
 import { Button, Field, Input, uiText } from '@/components/ui';
+import { BrandMark } from '@/components/app/brand-mark';
 // Persistence must be registered in THIS page's module graph too: /login sits
 // outside the (app) group, and the Login audit record below is the first
 // repository consumer after a form sign-in. Without this import the audit
@@ -77,13 +78,9 @@ export default function LoginPage() {
           spacing token, so the named container scale is unusable here. */}
       <section className="w-full max-w-[24rem] rounded-2xl border border-white/10 bg-white p-xl shadow-[0_18px_50px_rgba(10,26,22,0.35)]">
         <div className="mb-lg flex flex-col items-center gap-xs">
-          <span
-            className="flex size-14 items-center justify-center rounded-2xl text-3xl font-bold text-white shadow-[0_6px_16px_rgba(12,110,95,0.35)]"
-            style={{ background: 'linear-gradient(135deg, #14926c, #0c6b66)' }}
-            aria-hidden="true"
-          >
-            د
-          </span>
+          {/* The approved BrandMark («الدال المنحوتة») — static SVG, renders
+              instantly; the soft emerald shadow keeps the premium lift. */}
+          <BrandMark size={56} className="rounded-2xl shadow-[0_6px_16px_rgba(12,110,95,0.35)]" />
           <h1 className="text-xl font-bold text-primary">الدفتر</h1>
           <p className="text-sm font-medium text-neutral-400">{uiText.auth.subtitle}</p>
         </div>
