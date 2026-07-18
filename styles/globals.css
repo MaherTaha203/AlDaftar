@@ -155,3 +155,39 @@ html {
   --rail-surface: color-mix(in srgb, var(--color-primary) 90%, #041d18);
   --workspace-surface: var(--color-neutral-100);
 }
+
+/*
+ * The rail must never grow a visible scrollbar: it would sit exactly on the
+ * seam (RTL puts an inner scrollbar on the inline-end edge) and sever the
+ * carve's connection to the workspace. The rail is condensed to fit common
+ * viewports; on short windows it still wheel/touch-scrolls — invisibly.
+ */
+.rail-scroll {
+  scrollbar-width: none;
+}
+.rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Carve glide (Sidebar Architecture v2 §motion) — the dock morphs from the
+ * old section to the new one via the native View Transitions API. Only the
+ * dock is named; the root snapshot is frozen so the page content swaps
+ * instantly while the carve glides — entering a room, not crossfading a
+ * screenshot. The name lives under a motion query so reduced-motion users
+ * never join a transition (the Sidebar also checks before starting one).
+ * Browsers without the API simply navigate — the carve appears in place.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .rail-dock {
+    view-transition-name: rail-dock;
+  }
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(rail-dock) {
+  animation-duration: 0.32s;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
