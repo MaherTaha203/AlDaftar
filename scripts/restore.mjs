@@ -63,6 +63,8 @@ const TABLES = [
   'purchases',
   'purchase_returns',
   'payments',
+  'custody',
+  'custody_returns',
   'attachments',
   'audit',
   'settings',

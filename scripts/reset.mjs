@@ -70,6 +70,8 @@ const BUCKET = 'attachments';
 // Operational tables, in child→parent order (no hard FKs exist, but this keeps
 // the intent clear and stays correct if constraints are ever added).
 const OPERATIONAL = [
+  'custody_returns',
+  'custody',
   'purchase_returns',
   'payments',
   'purchases',
@@ -86,6 +88,8 @@ const DISPLAY = [
   ['purchases', 'المشتريات'],
   ['purchase_returns', 'مرتجعات الشراء'],
   ['payments', 'المدفوعات'],
+  ['custody', 'سندات العهدة'],
+  ['custody_returns', 'إرجاعات العهدة'],
   ['attachments', 'المرفقات'],
   ['audit', 'سجل العمليات'],
 ];

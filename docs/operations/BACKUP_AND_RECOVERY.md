@@ -57,8 +57,9 @@ If the Supabase project is deleted, corrupted, or lost:
 
 1. **Create a new Supabase project.**
 2. **Apply the schema in order** (Supabase SQL editor):
-   `0001_init_up.sql` → `0002_auth_up.sql` → `0003_single_admin_up.sql`.
-   Then `npm run verify:schema` to confirm (21 checks).
+   `0001_init_up.sql` → `0002_auth_up.sql` → `0003_single_admin_up.sql` →
+   `0004_harden_single_admin_fn_up.sql` → `0005_custody_up.sql`.
+   Then `npm run verify:schema` to confirm.
 3. **Point the app/scripts at the new project** — update `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
 4. **Recreate the admin account:** `npm run admin:create <email> <password>`.

@@ -63,6 +63,8 @@ export const AUDIT_ENTITY_LABEL: Record<string, string> = {
   purchases: 'المشتريات',
   'purchase-returns': 'مرتجعات الشراء',
   payments: 'المدفوعات',
+  custody: 'سندات العهدة',
+  'custody-returns': 'إرجاعات العهدة',
   attachments: 'المرفقات',
   settings: 'الإعدادات',
   auth: 'الدخول والخروج',
