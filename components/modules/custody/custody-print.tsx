@@ -14,10 +14,11 @@ import { formatDate, Spinner } from '@/components/ui';
 import { CompanyHeader } from '../shared/company-header';
 
 /**
- * CustodyPrint — the printable custody voucher (سند عهدة): company header +
- * logo, recipient, number/date, the delivered items with their remaining
- * balance, recipient + issuer signature lines, and a future-ready QR
- * placeholder. No money — this is a handover record, not an invoice.
+ * CustodyPrint — the printable goods-receipt voucher (سند استلام بضاعة):
+ * company header + logo, recipient, number/date, the delivered items with their
+ * remaining balance, and a single recipient signature line — matching the house
+ * print style of the other documents. No money — a handover record, not an
+ * invoice.
  */
 export function CustodyPrint({ custodyId }: { custodyId: string }) {
   const router = useRouter();
@@ -45,7 +46,7 @@ export function CustodyPrint({ custodyId }: { custodyId: string }) {
 
   return (
     <PrintLayout
-      title={isDraft ? 'سند عهدة (مسودة)' : `سند عهدة رقم ${custody.number}`}
+      title={isDraft ? 'سند استلام بضاعة (مسودة)' : `سند استلام بضاعة رقم ${custody.number}`}
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
       meta={
@@ -58,19 +59,7 @@ export function CustodyPrint({ custodyId }: { custodyId: string }) {
       }
       printedOn={`طُبع في ${formatDate(new Date().toISOString().slice(0, 10))}`}
       onBack={() => router.back()}
-      signature={
-        <div className="flex items-end justify-between gap-2xl">
-          <div className="flex flex-1 flex-col gap-2xl">توقيع المُستلِم: ______________</div>
-          <div className="flex flex-1 flex-col gap-2xl">توقيع المُسلِّم: ______________</div>
-          {/* Future-ready QR placeholder (no encoder yet — deliberate). */}
-          <div className="flex flex-col items-center gap-xs">
-            <div className="flex size-20 items-center justify-center rounded-sm border border-dashed border-neutral-300 text-[10px] text-neutral-400">
-              QR
-            </div>
-            <span className="text-[10px] text-neutral-400">رمز التحقق (لاحقًا)</span>
-          </div>
-        </div>
-      }
+      signature={<div className="flex flex-col gap-2xl">توقيع المُستلِم: ______________</div>}
     >
       <div className="flex flex-wrap justify-between gap-md text-sm">
         <div>

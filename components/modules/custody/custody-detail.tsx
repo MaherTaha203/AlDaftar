@@ -173,7 +173,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
   }
 
   const status = presentedStatus(custody, basis.returns, todayIso());
-  const title = isDraft ? 'مسودة عهدة' : `سند عهدة رقم ${custody.number}`;
+  const title = isDraft ? 'مسودة استلام بضاعة' : `سند استلام بضاعة رقم ${custody.number}`;
 
   return (
     <PageLayout leafLabel={title}>
@@ -341,7 +341,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
 
       <ConfirmDialog
         open={confirmIssue}
-        title="إصدار سند العهدة"
+        title="إصدار سند الاستلام"
         confirmLabel="إصدار"
         busy={issueOp.pending}
         onConfirm={() => void handleIssue()}
@@ -353,7 +353,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
 
       <ConfirmDialog
         open={confirmCancel}
-        title="إلغاء سند العهدة"
+        title="إلغاء سند الاستلام"
         confirmLabel="إلغاء السند"
         danger
         busy={cancelOp.pending}
@@ -366,7 +366,7 @@ export function CustodyDetail({ custodyId }: CustodyDetailProps) {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="حذف مسودة العهدة"
+        title="حذف مسودة الاستلام"
         confirmLabel="حذف نهائيًا"
         danger
         busy={del.pending}

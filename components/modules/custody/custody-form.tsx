@@ -325,7 +325,7 @@ export function CustodyForm({ custodyId }: CustodyFormProps) {
 
       <ConfirmDialog
         open={confirmingIssue}
-        title="إصدار سند العهدة"
+        title="إصدار سند الاستلام"
         confirmLabel="إصدار"
         busy={busy}
         onConfirm={() => void handleIssue()}

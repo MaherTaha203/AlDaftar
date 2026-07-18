@@ -1,5 +1,5 @@
 /**
- * Custody module (سند عهدة) — domain types + pure read helpers.
+ * Custody module (سند استلام بضاعة) — domain types + pure read helpers.
  *
  * A custody voucher documents items physically handed to a person as a trust
  * (عهدة) to be returned later. It is deliberately NOT a sale, purchase,

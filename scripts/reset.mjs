@@ -88,8 +88,8 @@ const DISPLAY = [
   ['purchases', 'المشتريات'],
   ['purchase_returns', 'مرتجعات الشراء'],
   ['payments', 'المدفوعات'],
-  ['custody', 'سندات العهدة'],
-  ['custody_returns', 'إرجاعات العهدة'],
+  ['custody', 'سندات استلام البضاعة'],
+  ['custody_returns', 'إرجاعات الاستلام'],
   ['attachments', 'المرفقات'],
   ['audit', 'سجل العمليات'],
 ];

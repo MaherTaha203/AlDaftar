@@ -166,11 +166,11 @@ export function CustodyList() {
   return (
     <>
       <ListPage
-        description="سندات العهدة — أصناف سُلِّمت لأشخاص كعهدة، مع متابعة ما أُرجع وما تبقّى."
+        description="سندات استلام البضاعة — أصناف بضاعة سُلِّمت لأشخاص، مع متابعة ما أُرجع وما تبقّى."
         onNew={() => router.push('/custody/new')}
         primaryAction={
           <Link href="/custody/new">
-            <Button icon={<PlusIcon />}>سند عهدة جديد</Button>
+            <Button icon={<PlusIcon />}>سند استلام بضاعة جديد</Button>
           </Link>
         }
         search={{
@@ -245,11 +245,11 @@ export function CustodyList() {
         loading={pending && rows.length === 0}
         error={error}
         onRetry={() => void load().then((r) => r.ok && setRows(r.value))}
-        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد سندات عهدة بعد'}
+        emptyMessage={isFiltered ? 'لا توجد نتائج مطابقة' : 'لا توجد سندات استلام بضاعة بعد'}
         emptyAction={
           isFiltered ? undefined : (
             <Link href="/custody/new">
-              <Button variant="secondary">سند عهدة جديد</Button>
+              <Button variant="secondary">سند استلام بضاعة جديد</Button>
             </Link>
           )
         }
@@ -259,7 +259,11 @@ export function CustodyList() {
       <SideDetailPanel
         open={peek !== null}
         onClose={() => setPeek(null)}
-        title={peek?.custody.number == null ? 'مسودة عهدة' : `سند عهدة رقم ${peek?.custody.number}`}
+        title={
+          peek?.custody.number == null
+            ? 'مسودة استلام بضاعة'
+            : `سند استلام بضاعة رقم ${peek?.custody.number}`
+        }
         subtitle={peek ? <CustodyStatusBadge status={peek.status} /> : undefined}
         onOpenFullPage={
           peek

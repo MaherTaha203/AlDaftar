@@ -1,4 +1,4 @@
-// Custody module (سند عهدة) — types, pure derivations, and application service.
+// Custody module (سند استلام بضاعة) — types, pure derivations, and application service.
 
 export {
   CustodyStatus,
