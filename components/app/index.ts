@@ -3,6 +3,7 @@
 
 export { AppProviders } from './app-providers';
 export { AppShellFrame } from './app-shell-frame';
+export { BrandMark, type BrandMarkProps } from './brand-mark';
 export { AuthGate } from './auth-gate';
 export { APP_BRAND, navigationGroups } from './navigation';
 export {
