@@ -42,9 +42,12 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
   return (
     <div
       className={cn(
-        // Calm, static workspace ground — a very subtle emerald-tinted wash
-        // (no motion inside the app, per the design brief).
-        'flex h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--color-neutral-100)_0%,color-mix(in_srgb,var(--color-neutral-100)_55%,white)_100%)]',
+        // Sidebar Architecture v2: the shell root IS the emerald solid — the
+        // rail is a face of it, and the workspace panel is carved out of it
+        // (inset, large radius). Flat colour so the carve stays seamless. On
+        // paper the solid disappears (print keeps the sheet only).
+        'flex h-dvh overflow-hidden bg-(--rail-surface)',
+        'print:block print:h-auto print:overflow-visible print:bg-white',
         className,
       )}
     >
@@ -71,7 +74,7 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
             `absolute` panel anchors to a 0-width box and lands off-screen (proven
             on phones). `fixed inset-y-0 start-0` pins it to the inline-start edge
             (right in this RTL app); the ::backdrop still dims + closes on tap. */}
-        <div className="fixed inset-y-0 start-0 flex max-w-[calc(100vw-3rem)] bg-[color-mix(in_srgb,var(--color-primary)_82%,#020e0b)] shadow-lg">
+        <div className="fixed inset-y-0 start-0 flex max-w-[calc(100vw-3rem)] bg-(--rail-surface) shadow-lg">
           <Sidebar {...sidebar} />
           <button
             type="button"
@@ -84,7 +87,18 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
         </div>
       </dialog>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* The workspace — carved out of the emerald solid: inset from the frame
+          on three sides with a large radius, but FLUSH at the rail seam (no
+          margin, no border, no start radius) so the surface is continuous with
+          the carve around the active nav item. Below md the rail is a drawer,
+          so the workspace is full-bleed; on paper it is a plain sheet. */}
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 flex-col overflow-hidden bg-(--workspace-surface)',
+          'md:my-3.5 md:me-3.5 md:rounded-e-[26px]',
+          'print:m-0 print:overflow-visible print:rounded-none print:bg-white',
+        )}
+      >
         <div className="screen-only contents">
           <Header {...header} onMenuClick={() => setDrawerOpen(true)} />
         </div>

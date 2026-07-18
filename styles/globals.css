@@ -138,3 +138,20 @@ html {
 :root[data-focus='on'] .app-focus-collapsible {
   display: none;
 }
+
+/*
+ * Sidebar Architecture v2 — the two physical surfaces of the shell.
+ *
+ * The system is one cast emerald solid (`--rail-surface`); the workspace is
+ * carved out of it (`--workspace-surface`, the content ground). These are NOT
+ * new design tokens — both derive from the guarded @theme tokens above — they
+ * exist so every element that belongs to one solid states which body it is
+ * part of, instead of repeating color-mix() recipes. The carve around the
+ * active navigation item is real DOM geometry (in-flow elements + corner
+ * radii; see components/layout/sidebar.tsx) — no masks, no pseudo-elements,
+ * no JS measurement.
+ */
+:root {
+  --rail-surface: color-mix(in srgb, var(--color-primary) 90%, #041d18);
+  --workspace-surface: var(--color-neutral-100);
+}

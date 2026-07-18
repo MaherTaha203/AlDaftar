@@ -6,18 +6,34 @@ import type { ReactNode } from 'react';
 import { cn } from '../ui/cn';
 
 /**
- * Sidebar — 03_UI_Specification.md §2. Fixed inline-start (right in RTL)
- * navigation, 260px; collapses to icons between lg and xl per 03 §5.
- * Business-blind: navigation groups/items arrive as props; active detection
- * matches the current pathname prefix. Below md the shell renders it as a
- * drawer (see AppShell).
+ * Sidebar — Sidebar Architecture v2 (03_UI_Specification.md §2).
  *
- * Visual identity — Royal Emerald (Design Sprint, approved concept B). The
- * sidebar is a deep emerald surface derived from the `--color-primary` token
- * (via color-mix, so it tracks the token and adds nothing to the DL-006 theme
- * projection). Light foreground; the active item carries a soft white "you are
- * here" bar. This is the element the product is recognized by, while the
- * content workspace stays white and calm for long entry sessions.
+ * Physical model: the emerald rail is the solid object; the workspace is
+ * carved out of it. The active navigation item is NOT a highlighted button —
+ * it is the first visible part of the carved workspace, entering the rail's
+ * body. That relationship is built in the DOM, not painted:
+ *
+ *   <nav>                     ← the rail: a face of the emerald solid
+ *     <li>                    ← plain item: label resting on the solid
+ *     <li> (the dock)         ← THE CARVE — an in-flow block that owns real
+ *       ├ workspace surface   ←   height, so activating an item physically
+ *       ├ rail cap (top)      ←   reshapes the rail:
+ *       ├ active <Link>       ←   · the workspace surface enters at the seam
+ *       └ rail cap (bottom)   ←   · the caps are the rail's own body, their
+ *     <li>                    ←     corner radii curving into the carve
+ *   </nav>
+ *   <workspace panel>         ← same surface, flush at the seam — one ground
+ *
+ * The caps carry `--rail-surface` (the solid's colour) and the dock carries
+ * `--workspace-surface` (the content ground), so the geometry is expressed by
+ * which body each element belongs to. No masks, no pseudo-elements, no JS
+ * measurement — plain flow layout and border radii, correct in RTL via
+ * logical properties.
+ *
+ * Business-blind: navigation groups/items arrive as props; active detection
+ * matches the current pathname prefix. Between lg and xl the rail collapses
+ * to icons (the carve still works — it is layout, not decoration); below md
+ * the shell renders it as a drawer (see AppShell).
  */
 export interface SidebarItem {
   label: string;
@@ -37,6 +53,9 @@ export interface SidebarProps {
   className?: string;
 }
 
+/** Radius of the concave curve where the rail bends into the carve. */
+const CAP = 'h-[22px]';
+
 export function Sidebar({ groups, brand, className }: SidebarProps) {
   const pathname = usePathname();
 
@@ -48,41 +67,93 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
     <nav
       aria-label="التنقل الرئيسي"
       className={cn(
-        'flex h-full w-[260px] flex-col gap-lg overflow-y-auto border-e border-white/10 p-md',
-        // Royal Emerald surface — a subtle vertical depth built from the
-        // primary token so it deepens the brand without a new token.
-        'bg-[linear-gradient(186deg,color-mix(in_srgb,var(--color-primary)_86%,#04211c)_0%,var(--color-primary)_58%,color-mix(in_srgb,var(--color-primary)_78%,#020e0b)_100%)]',
-        'max-xl:w-16 max-xl:items-center max-md:w-[260px] max-md:items-stretch',
+        // A face of the emerald solid — flat, calm, and open toward the seam
+        // (no inline-end padding/border) so the carve reaches the workspace.
+        'relative flex h-full w-[260px] flex-col gap-lg overflow-y-auto py-lg pe-0 ps-0',
+        'bg-(--rail-surface)',
+        'max-xl:w-16 max-md:w-[260px]',
         className,
       )}
     >
-      {brand ? <div className="px-sm py-xs max-xl:px-0 max-md:px-sm">{brand}</div> : null}
+      {brand ? <div className="px-md max-xl:px-xs max-md:px-md">{brand}</div> : null}
+
       {groups.map((group) => (
         <div key={group.label} className="flex flex-col gap-xs">
-          <p className="px-sm text-xs font-medium tracking-wide text-white/45 max-xl:sr-only max-md:not-sr-only max-md:px-sm">
+          <p className="px-md text-xs font-medium tracking-wide text-white/40 max-xl:sr-only max-md:not-sr-only max-md:px-md">
             {group.label}
           </p>
           <ul className="flex flex-col gap-xs">
             {group.items.map((item) => {
               const active = isActive(item.href);
+
+              if (active) {
+                // The dock — the carved opening. In flow: it owns its full
+                // height (cap + item + cap), so the rail physically changes
+                // shape around the active item.
+                return (
+                  <li key={item.href} className="relative">
+                    {/* The workspace surface entering the rail: a full-height
+                        strip at the seam, continuous with the content panel —
+                        the concave caps reveal it. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-y-0 end-0 w-[26px] bg-(--workspace-surface)"
+                    />
+                    {/* The rail's own body above the carve — its end-end
+                        corner is the upper concave curve. */}
+                    <span
+                      aria-hidden="true"
+                      className={cn('relative block rounded-ee-[22px] bg-(--rail-surface)', CAP)}
+                    />
+                    <Link
+                      href={item.href}
+                      aria-current="page"
+                      title={item.label}
+                      className={cn(
+                        // First visible part of the workspace: same ground
+                        // colour, reaching the seam — no border, no shadow.
+                        'relative flex h-[46px] items-center gap-sm rounded-s-[20px] ms-sm px-md',
+                        'bg-(--workspace-surface) text-sm font-bold text-primary',
+                        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary',
+                        'max-xl:ms-xs max-xl:justify-center max-xl:px-0 max-md:ms-sm max-md:justify-start max-md:px-md',
+                      )}
+                    >
+                      {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
+                      <span className="truncate max-xl:sr-only max-md:not-sr-only">
+                        {item.label}
+                      </span>
+                    </Link>
+                    {/* The rail's body below the carve — the lower curve. */}
+                    <span
+                      aria-hidden="true"
+                      className={cn('relative block rounded-se-[22px] bg-(--rail-surface)', CAP)}
+                    />
+                  </li>
+                );
+              }
+
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    aria-current={active ? 'page' : undefined}
                     title={item.label}
                     className={cn(
-                      'relative flex items-center gap-sm rounded-md px-sm py-sm text-sm transition-colors duration-150',
+                      'group flex h-[46px] items-center gap-sm rounded-2xl px-md text-sm',
+                      'me-sm ms-sm font-medium text-white/72',
+                      'transition-[transform,background-color,color,box-shadow] duration-200 ease-out',
+                      // Hover: the item leans toward the workspace and its
+                      // surface softens toward it — no scale, no pop.
+                      'hover:-translate-x-1.5 hover:bg-white/[0.12] hover:font-semibold hover:text-white',
+                      'hover:shadow-[-10px_0_26px_-14px_rgba(0,0,0,0.32)]',
                       'focus-visible:outline-2 focus-visible:outline-white',
-                      // Active: soft white wash + a rounded, gently glowing
-                      // accent bar at the inline-start edge (the "you are here"
-                      // indicator) — the calm identity cue on the emerald field.
-                      active
-                        ? 'bg-white/[0.12] font-semibold text-white before:absolute before:inset-y-1.5 before:start-0 before:w-[3px] before:rounded-full before:bg-white before:shadow-[0_0_10px_rgba(255,255,255,0.45)] max-xl:before:hidden max-md:before:block'
-                        : 'text-white/70 hover:bg-white/[0.06] hover:text-white',
+                      'max-xl:mx-xs max-xl:justify-center max-xl:px-0 max-md:mx-sm max-md:justify-start max-md:px-md',
                     )}
                   >
-                    {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
+                    {item.icon ? (
+                      <span className="shrink-0 opacity-85 transition-[transform,opacity] duration-200 ease-out group-hover:-translate-x-0.5 group-hover:opacity-100">
+                        {item.icon}
+                      </span>
+                    ) : null}
                     <span className="truncate max-xl:sr-only max-md:not-sr-only">{item.label}</span>
                   </Link>
                 </li>
