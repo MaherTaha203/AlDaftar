@@ -98,7 +98,7 @@ export function DataTable<TRow>({
 
   return (
     <div
-      className={cn('overflow-auto rounded-lg border border-neutral-200', className)}
+      className={cn('w-full min-w-0 overflow-auto rounded-lg border border-neutral-200', className)}
       style={maxHeight !== undefined ? { maxHeight } : undefined}
     >
       <table className="w-full border-collapse bg-white text-sm">

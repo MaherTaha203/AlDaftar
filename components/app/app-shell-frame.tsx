@@ -61,25 +61,35 @@ export function AppShellFrame({ children }: { children: ReactNode }) {
         search: <GlobalSearch />,
         actions: (
           <>
+            {/* Essentials — visible on every screen size (focus-collapsible on desktop). */}
             <span className="app-focus-collapsible contents">
               <QuickCreate />
               <NotificationsBell />
+              <UserMenu />
+            </span>
+            {/* Desktop power-tools — hidden on phones to keep the bar uncluttered
+                and reachable. The clock/calculator/status bar, backup status,
+                help, and System Center all have homes elsewhere on mobile. */}
+            <span className="app-focus-collapsible contents max-md:hidden">
               <ProductivityBar />
               <BackupStatus />
               <span className="mx-0.5 h-5 w-px bg-neutral-200" aria-hidden="true" />
               <HelpButton />
               <SystemCenter />
-              <UserMenu />
             </span>
-            <FocusToggle />
+            {/* Focus mode collapses desktop chrome — not meaningful on a phone. */}
+            <span className="contents max-md:hidden">
+              <FocusToggle />
+            </span>
             <Button
               variant="outline"
               size="sm"
               icon={<LogOutIcon />}
               loading={signingOut}
               onClick={() => void onLogout()}
+              aria-label={uiText.auth.logout}
             >
-              {uiText.auth.logout}
+              <span className="max-sm:sr-only">{uiText.auth.logout}</span>
             </Button>
           </>
         ),

@@ -66,7 +66,12 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
         }}
         className="screen-only m-0 h-dvh max-h-none w-full max-w-none bg-transparent backdrop:bg-black/40 md:hidden"
       >
-        <div className="absolute inset-y-0 start-0 flex bg-[color-mix(in_srgb,var(--color-primary)_82%,#020e0b)] shadow-lg">
+        {/* The panel is fixed to the VIEWPORT, not the dialog: a modal <dialog>
+            whose only child is out-of-flow collapses to zero width, so an
+            `absolute` panel anchors to a 0-width box and lands off-screen (proven
+            on phones). `fixed inset-y-0 start-0` pins it to the inline-start edge
+            (right in this RTL app); the ::backdrop still dims + closes on tap. */}
+        <div className="fixed inset-y-0 start-0 flex max-w-[calc(100vw-3rem)] bg-[color-mix(in_srgb,var(--color-primary)_82%,#020e0b)] shadow-lg">
           <Sidebar {...sidebar} />
           <button
             type="button"
@@ -83,7 +88,7 @@ export function AppShell({ sidebar, header, children, className }: AppShellProps
         <div className="screen-only contents">
           <Header {...header} onMenuClick={() => setDrawerOpen(true)} />
         </div>
-        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

@@ -29,8 +29,10 @@ export function PageContainer({
   className,
 }: PageContainerProps) {
   return (
-    <div className={cn('mx-auto flex w-full max-w-[1280px] flex-col gap-md p-lg', className)}>
-      <div className="flex flex-col gap-xs">
+    <div
+      className={cn('mx-auto flex w-full min-w-0 max-w-[1280px] flex-col gap-md p-lg', className)}
+    >
+      <div className="flex min-w-0 flex-col gap-xs">
         {breadcrumb}
         <div className="flex flex-wrap items-center justify-between gap-md">
           <h1 className="text-xl font-semibold tracking-[-0.01em]">{title}</h1>
@@ -40,7 +42,9 @@ export function PageContainer({
           <p className="max-w-[70ch] text-sm text-neutral-400">{description}</p>
         ) : null}
       </div>
-      <div className="flex flex-col gap-md">{children}</div>
+      {/* min-w-0 lets a wide DataTable's scroll container shrink to the viewport
+          and scroll internally, instead of stretching the whole page. */}
+      <div className="flex min-w-0 flex-col gap-md">{children}</div>
     </div>
   );
 }

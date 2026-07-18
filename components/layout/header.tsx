@@ -46,8 +46,10 @@ export function Header({ title, search, actions, onMenuClick, className }: Heade
         </button>
       ) : null}
       {title ? <div className="shrink-0 text-sm font-semibold">{title}</div> : null}
-      <div className="mx-auto w-full max-w-[480px]">{search}</div>
-      {actions ? <div className="flex shrink-0 items-center gap-sm">{actions}</div> : null}
+      <div className="mx-auto w-full min-w-0 max-w-[480px]">{search}</div>
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-sm max-md:gap-xs">{actions}</div>
+      ) : null}
     </header>
   );
 }
