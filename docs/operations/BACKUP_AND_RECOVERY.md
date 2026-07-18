@@ -10,7 +10,7 @@
 | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------- |
 | All records (suppliers, products, purchases, returns, payments, attachments metadata, **audit**, settings) | Supabase Postgres                              | `npm run backup` + managed backups |
 | Attachment binaries (invoice/receipt scans)                                                                | Supabase Storage bucket `attachments`          | `npm run backup`                   |
-| The database schema                                                                                        | `database/migrations/0001…0003` (in this repo) | Git                                |
+| The database schema                                                                                        | `database/migrations/0001…0005` (in this repo) | Git                                |
 | The application code                                                                                       | this repository                                | Git (commit + tag — see §7)        |
 
 ## 2. Two layers of backup (use both)
@@ -134,3 +134,29 @@ npm run reset                # takes a backup, confirms, then wipes operational 
   deliberately forbid these deletions (posted documents are immutable, audit is
   append-only, master data archives rather than deletes). Like backup/restore,
   the reset uses the service-role key server-side — never the browser.
+
+## 10. Adding a module later — APPLY ITS MIGRATION
+
+⚠️ **Merging code is not enough.** This repo has **no automatic migration
+runner** — every migration in `database/migrations/` is applied **by hand** in
+the Supabase SQL editor (that is how `0001`–`0005` were installed). When a new
+module ships with a new `NNNN_<slug>_up.sql`, the database step is separate and
+easy to forget: the code deploys, but the new tables never get created, so every
+read/write against them fails at runtime with a generic "حدث خطأ" — even though
+the build, tests, and other pages are all green.
+
+When you add (or receive) a module that introduces tables, do both steps:
+
+1. **Code:** merge/deploy as usual.
+2. **Database:** open the **correct** Supabase project (double-check it is Al
+   Daftar's, not another app), **SQL Editor → paste the new
+   `NNNN_<slug>_up.sql` → Run**. The files are idempotent (`create table if not
+exists` / `create policy`), so re-running is safe.
+3. **Confirm:** `npm run verify:schema` — it lists every expected table and
+   fails loudly on any that is missing. Run it after any schema change; a clean
+   pass means the app and the database agree.
+
+Precedent: the Custody module (`0005_custody_up.sql`, tables `custody` +
+`custody_returns`) shipped in code but its migration was initially missed, which
+made the whole Custody screen error until the SQL was run. `verify:schema` would
+have caught it immediately.
