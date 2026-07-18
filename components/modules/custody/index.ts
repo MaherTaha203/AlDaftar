@@ -1,4 +1,4 @@
-// Custody module UI (سند عهدة) — list, form, and detail screens.
+// Custody module UI (سند استلام بضاعة) — list, form, and detail screens.
 
 export { CustodyList } from './custody-list';
 export { CustodyForm, type CustodyFormProps } from './custody-form';

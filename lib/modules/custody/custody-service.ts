@@ -27,7 +27,7 @@ function custodyLabel(record: Custody): string {
 }
 
 /**
- * CustodyService — the custody voucher (سند عهدة) and its return events.
+ * CustodyService — the custody voucher (سند استلام بضاعة) and its return events.
  *
  * A voucher's Draft → Issued → Cancelled lifecycle mirrors the accounting
  * modules' Draft → Posted guardrails (issued content is immutable, drafts are
@@ -175,7 +175,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody',
         entityId: created.id,
         entityLabel: custodyLabel(created),
-        summary: 'إنشاء مسودة سند عهدة',
+        summary: 'إنشاء مسودة سند استلام بضاعة',
         after: created,
       });
       return created;
@@ -196,7 +196,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody',
         entityId: updated.id,
         entityLabel: custodyLabel(updated),
-        summary: 'تعديل مسودة سند عهدة',
+        summary: 'تعديل مسودة سند استلام بضاعة',
         before: existing,
         after: updated,
       });
@@ -255,7 +255,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody',
         entityId: issued.id,
         entityLabel: custodyLabel(issued),
-        summary: `إصدار سند عهدة رقم ${number}`,
+        summary: `إصدار سند استلام بضاعة رقم ${number}`,
         before: custody,
         after: issued,
       });
@@ -295,7 +295,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody',
         entityId: cancelled.id,
         entityLabel: custodyLabel(cancelled),
-        summary: `إلغاء سند عهدة ${custodyLabel(cancelled)}`,
+        summary: `إلغاء سند استلام بضاعة ${custodyLabel(cancelled)}`,
         before: custody,
         after: cancelled,
       });
@@ -319,7 +319,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody',
         entityId: id,
         entityLabel: custodyLabel(custody),
-        summary: 'حذف مسودة سند عهدة',
+        summary: 'حذف مسودة سند استلام بضاعة',
         before: custody,
       });
     });
@@ -386,7 +386,7 @@ export class CustodyService extends ApplicationService {
         entityType: 'custody-returns',
         entityId: created.id,
         entityLabel: custodyLabel(custody),
-        summary: `تسجيل إرجاع على سند عهدة ${custodyLabel(custody)}`,
+        summary: `تسجيل إرجاع على سند استلام بضاعة ${custodyLabel(custody)}`,
         after: created,
       });
       return created;
