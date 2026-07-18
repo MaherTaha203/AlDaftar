@@ -65,5 +65,7 @@ export const uiText = {
     invalidCredentials: 'بيانات الدخول غير صحيحة',
     logout: 'تسجيل الخروج',
     checkingSession: 'جارٍ التحقق من الجلسة…',
+    subtitle: 'نظام محاسبي احترافي',
+    rememberMe: 'إبقائي مسجَّلًا',
   },
 } as const;

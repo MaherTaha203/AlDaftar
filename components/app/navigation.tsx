@@ -4,6 +4,7 @@ import {
   AuditLogIcon,
   CategoriesIcon,
   CurrenciesIcon,
+  CustodyIcon,
   DashboardIcon,
   PaymentsIcon,
   ProductsIcon,
@@ -43,6 +44,7 @@ export const navigationGroups: readonly SidebarGroup[] = [
       { label: 'المشتريات', href: '/purchases', icon: <PurchasesIcon /> },
       { label: 'مرتجعات الشراء', href: '/purchase-returns', icon: <ReturnsIcon /> },
       { label: 'المدفوعات', href: '/payments', icon: <PaymentsIcon /> },
+      { label: 'سندات العهدة', href: '/custody', icon: <CustodyIcon /> },
     ],
   },
   {
