@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 import { cn } from '../ui/cn';
 
 /**
@@ -24,11 +24,16 @@ import { cn } from '../ui/cn';
  *   </nav>
  *   <workspace panel>         ← same surface, flush at the seam — one ground
  *
- * The caps carry `--rail-surface` (the solid's colour) and the dock carries
- * `--workspace-surface` (the content ground), so the geometry is expressed by
- * which body each element belongs to. No masks, no pseudo-elements, no JS
- * measurement — plain flow layout and border radii, correct in RTL via
- * logical properties.
+ * Motion: on navigation the dock GLIDES from the old section to the new one
+ * via the native View Transitions API (`.rail-dock` view-transition-name in
+ * globals.css). The API snapshots the real in-flow dock before and after the
+ * route change and morphs between them — the DOM keeps owning the geometry;
+ * no measurement, no overlay. Unsupported browsers and reduced-motion users
+ * get an instant, correct carve.
+ *
+ * Density: item height tracks `--ctrl-h`, and the rail is condensed to fit
+ * common viewports without scrolling — a scrollbar would sit on the seam and
+ * sever the carve (see `.rail-scroll`).
  *
  * Business-blind: navigation groups/items arrive as props; active detection
  * matches the current pathname prefix. Between lg and xl the rail collapses
@@ -53,14 +58,53 @@ export interface SidebarProps {
   className?: string;
 }
 
-/** Radius of the concave curve where the rail bends into the carve. */
-const CAP = 'h-[22px]';
+/** Height of the concave curve where the rail bends into the carve. */
+const CAP = 'h-[18px]';
 
 export function Sidebar({ groups, brand, className }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  // Resolves the pending view transition once the new route has rendered.
+  const settleNavigation = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    settleNavigation.current?.();
+    settleNavigation.current = null;
+  }, [pathname]);
 
   function isActive(href: string): boolean {
     return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+  }
+
+  /**
+   * Wraps client navigation in a view transition so the dock glides to the
+   * clicked section. Falls back to the plain <Link> navigation for modified
+   * clicks (new tab…), same-section clicks, reduced motion, and browsers
+   * without the API.
+   */
+  function navigate(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      isActive(href) ||
+      typeof document.startViewTransition !== 'function' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+    event.preventDefault();
+    document.startViewTransition(() => {
+      router.push(href);
+      return new Promise<void>((resolve) => {
+        settleNavigation.current = resolve;
+        // Never hold the old frame hostage if the route stalls.
+        setTimeout(resolve, 800);
+      });
+    });
   }
 
   return (
@@ -69,7 +113,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
       className={cn(
         // A face of the emerald solid — flat, calm, and open toward the seam
         // (no inline-end padding/border) so the carve reaches the workspace.
-        'relative flex h-full w-[260px] flex-col gap-lg overflow-y-auto py-lg pe-0 ps-0',
+        'rail-scroll relative flex h-full w-[260px] flex-col gap-md overflow-y-auto py-md pe-0 ps-0',
         'bg-(--rail-surface)',
         'max-xl:w-16 max-md:w-[260px]',
         className,
@@ -79,7 +123,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
 
       {groups.map((group) => (
         <div key={group.label} className="flex flex-col gap-xs">
-          <p className="px-md text-xs font-medium tracking-wide text-white/40 max-xl:sr-only max-md:not-sr-only max-md:px-md">
+          <p className="px-md text-[11px] font-medium tracking-wide text-white/40 max-xl:sr-only max-md:not-sr-only max-md:px-md">
             {group.label}
           </p>
           <ul className="flex flex-col gap-xs">
@@ -91,19 +135,19 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
                 // height (cap + item + cap), so the rail physically changes
                 // shape around the active item.
                 return (
-                  <li key={item.href} className="relative">
+                  <li key={item.href} className="rail-dock relative">
                     {/* The workspace surface entering the rail: a full-height
                         strip at the seam, continuous with the content panel —
                         the concave caps reveal it. */}
                     <span
                       aria-hidden="true"
-                      className="absolute inset-y-0 end-0 w-[26px] bg-(--workspace-surface)"
+                      className="absolute inset-y-0 end-0 w-[22px] bg-(--workspace-surface)"
                     />
                     {/* The rail's own body above the carve — its end-end
                         corner is the upper concave curve. */}
                     <span
                       aria-hidden="true"
-                      className={cn('relative block rounded-ee-[22px] bg-(--rail-surface)', CAP)}
+                      className={cn('relative block rounded-ee-[18px] bg-(--rail-surface)', CAP)}
                     />
                     <Link
                       href={item.href}
@@ -112,7 +156,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
                       className={cn(
                         // First visible part of the workspace: same ground
                         // colour, reaching the seam — no border, no shadow.
-                        'relative flex h-[46px] items-center gap-sm rounded-s-[20px] ms-sm px-md',
+                        'relative flex h-(--ctrl-h) items-center gap-sm rounded-s-2xl ms-sm px-md',
                         'bg-(--workspace-surface) text-sm font-bold text-primary',
                         'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary',
                         'max-xl:ms-xs max-xl:justify-center max-xl:px-0 max-md:ms-sm max-md:justify-start max-md:px-md',
@@ -126,7 +170,7 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
                     {/* The rail's body below the carve — the lower curve. */}
                     <span
                       aria-hidden="true"
-                      className={cn('relative block rounded-se-[22px] bg-(--rail-surface)', CAP)}
+                      className={cn('relative block rounded-se-[18px] bg-(--rail-surface)', CAP)}
                     />
                   </li>
                 );
@@ -137,8 +181,9 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
                   <Link
                     href={item.href}
                     title={item.label}
+                    onClick={(event) => navigate(event, item.href)}
                     className={cn(
-                      'group flex h-[46px] items-center gap-sm rounded-2xl px-md text-sm',
+                      'group flex h-(--ctrl-h) items-center gap-sm rounded-2xl px-md text-sm',
                       'me-sm ms-sm font-medium text-white/72',
                       'transition-[transform,background-color,color,box-shadow] duration-200 ease-out',
                       // Hover: the item leans toward the workspace and its
