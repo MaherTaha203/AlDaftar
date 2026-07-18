@@ -2,6 +2,7 @@
 
 export { AppShell, type AppShellProps } from './app-shell';
 export { Sidebar, type SidebarGroup, type SidebarItem, type SidebarProps } from './sidebar';
+export { BottomNav, type BottomNavProps } from './bottom-nav';
 export { Header, type HeaderProps } from './header';
 export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from './breadcrumb';
 export { Toolbar, type ToolbarProps } from './toolbar';
