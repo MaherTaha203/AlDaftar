@@ -3,6 +3,12 @@ import { ErrorFactory, type AsyncResult, type Result } from '@/lib/core';
 import { getPurchaseService, PurchaseStatus, type Purchase } from '../purchases';
 import { newRecordId, nowIso, type LocalRecordStore } from '../shared/local-record-store';
 import { RepositoryFactory } from '../shared/repository-factory';
+import {
+  assertMutableDraft,
+  consumptionByKey,
+  nextDocumentNumber,
+  remainingBasis,
+} from '../shared/document-kit';
 import { isValidIsoDate } from '../shared/dates';
 import { AuditAction, getAuditService } from '../audit';
 import {
@@ -178,7 +184,10 @@ export class PurchaseReturnService extends ApplicationService {
             lineId: line.id,
           });
         }
-        const returnable = purchaseLine.quantity - (returned[line.purchaseLineId] ?? 0);
+        const returnable = remainingBasis(
+          purchaseLine.quantity,
+          returned[line.purchaseLineId] ?? 0,
+        );
         if (line.quantity > returnable) {
           throw ErrorFactory.validation('Returned quantity exceeds the returnable remainder', {
             lineId: line.id,
@@ -238,24 +247,15 @@ export class PurchaseReturnService extends ApplicationService {
 
   /** Next RETURN number (BDR-01: the type's own plain sequence). */
   private async nextNumber(): Promise<number> {
-    const returns = this.unwrap(await this.repository.findAll());
-    return (
-      returns.reduce((max, r) => (r.number !== null && r.number > max ? r.number : max), 0) + 1
-    );
+    return nextDocumentNumber(this.unwrap(await this.repository.findAll()));
   }
 
   private async postedReturnedByLine(purchaseId: string): Promise<Record<string, number>> {
     const returns = this.unwrap(await this.repository.findAll());
-    const totals: Record<string, number> = {};
-    for (const record of returns) {
-      if (record.purchaseId !== purchaseId || record.status !== ReturnStatus.Posted) {
-        continue;
-      }
-      for (const line of record.lines) {
-        totals[line.purchaseLineId] = (totals[line.purchaseLineId] ?? 0) + line.quantity;
-      }
-    }
-    return totals;
+    return consumptionByKey(
+      returns.filter((r) => r.purchaseId === purchaseId && r.status === ReturnStatus.Posted),
+      (record) => record.lines.map((line) => [line.purchaseLineId, line.quantity] as const),
+    );
   }
 
   /** Builds return lines from positive quantities keyed by purchase line id. */
@@ -295,9 +295,7 @@ export class PurchaseReturnService extends ApplicationService {
   }
 
   private assertDraft(record: PurchaseReturn): void {
-    if (record.status !== ReturnStatus.Draft) {
-      throw ErrorFactory.conflict('Posted returns are immutable', { id: record.id });
-    }
+    assertMutableDraft(record, ReturnStatus.Draft, 'Posted returns are immutable');
   }
 
   private unwrap<T>(result: Result<T>): T {

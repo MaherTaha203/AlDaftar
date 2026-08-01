@@ -2,6 +2,7 @@ import { ApplicationService } from '@/lib/application';
 import { ErrorFactory, isNonEmptyString, type AsyncResult, type Result } from '@/lib/core';
 import { newRecordId, nowIso, type LocalRecordStore } from '../shared/local-record-store';
 import { RepositoryFactory } from '../shared/repository-factory';
+import { assertMutableDraft, nextDocumentNumber } from '../shared/document-kit';
 import { isValidIsoDate } from '../shared/dates';
 import { AuditAction, getAuditService } from '../audit';
 import {
@@ -395,10 +396,7 @@ export class CustodyService extends ApplicationService {
 
   /** Next official number: max issued number + 1, starting at 1 (per-type). */
   private async nextNumber(): Promise<number> {
-    const vouchers = this.unwrap(await this.repository.findAll());
-    return (
-      vouchers.reduce((max, v) => (v.number !== null && v.number > max ? v.number : max), 0) + 1
-    );
+    return nextDocumentNumber(this.unwrap(await this.repository.findAll()));
   }
 
   private async returnsFor(custodyId: string): Promise<readonly CustodyReturn[]> {
@@ -446,9 +444,7 @@ export class CustodyService extends ApplicationService {
   }
 
   private assertDraft(custody: Custody): void {
-    if (custody.status !== CustodyStatus.Draft) {
-      throw ErrorFactory.conflict('Issued vouchers are immutable', { id: custody.id });
-    }
+    assertMutableDraft(custody, CustodyStatus.Draft, 'Issued vouchers are immutable');
   }
 
   private unwrap<T>(result: Result<T>): T {
