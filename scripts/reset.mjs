@@ -72,6 +72,7 @@ const BUCKET = 'attachments';
 const OPERATIONAL = [
   'custody_returns',
   'custody',
+  'supplier_credit_notes',
   'purchase_returns',
   'payments',
   'purchases',
@@ -87,6 +88,7 @@ const DISPLAY = [
   ['products', 'المنتجات'],
   ['purchases', 'المشتريات'],
   ['purchase_returns', 'مرتجعات الشراء'],
+  ['supplier_credit_notes', 'إشعارات دائنة للموردين'],
   ['payments', 'المدفوعات'],
   ['custody', 'سندات استلام البضاعة'],
   ['custody_returns', 'إرجاعات الاستلام'],
