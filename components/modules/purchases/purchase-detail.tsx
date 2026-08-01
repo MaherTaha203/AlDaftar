@@ -185,6 +185,14 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
                       variant: 'secondary' as const,
                       onSelect: () => router.push(`/purchase-returns/new?purchase=${purchase.id}`),
                     },
+                    // BDD-011 boundary: goods moved back → return; value-only
+                    // correction → credit note.
+                    {
+                      key: 'credit-note',
+                      label: 'إنشاء إشعار دائن',
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/credit-notes/new?purchase=${purchase.id}`),
+                    },
                   ]),
               {
                 key: 'attachments',

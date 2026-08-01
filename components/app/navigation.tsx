@@ -1,5 +1,6 @@
 import type { SidebarGroup } from '../layout';
 import {
+  AdjustmentsIcon,
   ArchiveIcon,
   AuditLogIcon,
   CategoriesIcon,
@@ -62,6 +63,16 @@ export const navigationGroups: readonly SidebarGroup[] = [
         mobilePrimary: true,
         shortLabel: 'الاستلام',
       },
+      {
+        // Correction documents (BDD-011): one rail item, two tabbed lists.
+        // The item lands on credit notes; the refunds route stays registered
+        // (breadcrumbs/titles) via the railHidden entry below.
+        label: 'التسويات',
+        href: '/credit-notes',
+        icon: <AdjustmentsIcon />,
+        activePrefixes: ['/payment-refunds'],
+      },
+      { label: 'سندات استرداد الدفعات', href: '/payment-refunds', railHidden: true },
     ],
   },
   {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { cn } from '../ui/cn';
-import { isNavActive, useNavGlide } from './nav-glide';
+import { isNavItemActive, useNavGlide } from './nav-glide';
 
 /**
  * Sidebar — Sidebar Architecture v2 (03_UI_Specification.md §2).
@@ -43,6 +43,14 @@ export interface SidebarItem {
   mobilePrimary?: boolean;
   /** Compact label for the bottom bar's small tiles; falls back to `label`. */
   shortLabel?: string;
+  /**
+   * Registered for routing/breadcrumbs but not rendered in the rail or the
+   * phone fold — for routes reached through a sibling item's screen (e.g.
+   * «سندات استرداد الدفعات» lives behind the «التسويات» tabs).
+   */
+  railHidden?: boolean;
+  /** Extra pathname prefixes that keep this item active (tabbed sections). */
+  activePrefixes?: readonly string[];
 }
 
 export interface SidebarGroup {
@@ -83,81 +91,83 @@ export function Sidebar({ groups, brand, className }: SidebarProps) {
             {group.label}
           </p>
           <ul className="flex flex-col gap-xs">
-            {group.items.map((item) => {
-              const active = isNavActive(pathname, item.href);
+            {group.items
+              .filter((item) => !item.railHidden)
+              .map((item) => {
+                const active = isNavItemActive(pathname, item);
 
-              if (active) {
-                // The dock — the carved opening. In flow: it owns its full
-                // height (cap + item + cap), so the rail physically changes
-                // shape around the active item.
-                return (
-                  <li key={item.href} className="rail-dock relative">
-                    {/* The workspace surface entering the rail: a full-height
+                if (active) {
+                  // The dock — the carved opening. In flow: it owns its full
+                  // height (cap + item + cap), so the rail physically changes
+                  // shape around the active item.
+                  return (
+                    <li key={item.href} className="rail-dock relative">
+                      {/* The workspace surface entering the rail: a full-height
                         strip at the seam, continuous with the content panel —
                         the concave caps reveal it. */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-y-0 end-0 w-[22px] bg-(--workspace-surface)"
-                    />
-                    {/* The rail's own body above the carve — its end-end
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-y-0 end-0 w-[22px] bg-(--workspace-surface)"
+                      />
+                      {/* The rail's own body above the carve — its end-end
                         corner is the upper concave curve. */}
-                    <span
-                      aria-hidden="true"
-                      className={cn('relative block rounded-ee-[18px] bg-(--rail-surface)', CAP)}
-                    />
+                      <span
+                        aria-hidden="true"
+                        className={cn('relative block rounded-ee-[18px] bg-(--rail-surface)', CAP)}
+                      />
+                      <Link
+                        href={item.href}
+                        aria-current="page"
+                        title={item.label}
+                        className={cn(
+                          // First visible part of the workspace: same ground
+                          // colour, reaching the seam — no border, no shadow.
+                          'relative flex h-(--ctrl-h) items-center gap-sm rounded-s-2xl ms-sm px-md',
+                          'bg-(--workspace-surface) text-sm font-bold text-primary',
+                          'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary',
+                          'max-xl:ms-xs max-xl:justify-center max-xl:px-0',
+                        )}
+                      >
+                        {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
+                        <span className="truncate max-xl:sr-only">{item.label}</span>
+                      </Link>
+                      {/* The rail's body below the carve — the lower curve. */}
+                      <span
+                        aria-hidden="true"
+                        className={cn('relative block rounded-se-[18px] bg-(--rail-surface)', CAP)}
+                      />
+                    </li>
+                  );
+                }
+
+                return (
+                  <li key={item.href}>
                     <Link
                       href={item.href}
-                      aria-current="page"
                       title={item.label}
+                      onClick={(event) => navigate(event, item.href)}
                       className={cn(
-                        // First visible part of the workspace: same ground
-                        // colour, reaching the seam — no border, no shadow.
-                        'relative flex h-(--ctrl-h) items-center gap-sm rounded-s-2xl ms-sm px-md',
-                        'bg-(--workspace-surface) text-sm font-bold text-primary',
-                        'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary',
-                        'max-xl:ms-xs max-xl:justify-center max-xl:px-0',
+                        'group flex h-(--ctrl-h) items-center gap-sm rounded-2xl px-md text-sm',
+                        'me-sm ms-sm font-medium text-white/72',
+                        'transition-[transform,background-color,color,box-shadow] duration-200 ease-out',
+                        // Hover: the item leans toward the workspace and its
+                        // surface softens toward it — no scale, no pop.
+                        'hover:-translate-x-1.5 hover:bg-white/[0.12] hover:font-semibold hover:text-white',
+                        'hover:shadow-[-10px_0_26px_-14px_rgba(0,0,0,0.32)]',
+                        'focus-visible:outline-2 focus-visible:outline-white',
+                        'max-xl:mx-xs max-xl:justify-center max-xl:px-0',
                       )}
                     >
-                      {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
+                      {item.icon ? (
+                        <span className="shrink-0 opacity-85 transition-[transform,opacity] duration-200 ease-out group-hover:-translate-x-0.5 group-hover:opacity-100">
+                          {item.icon}
+                        </span>
+                      ) : null}
                       <span className="truncate max-xl:sr-only">{item.label}</span>
                     </Link>
-                    {/* The rail's body below the carve — the lower curve. */}
-                    <span
-                      aria-hidden="true"
-                      className={cn('relative block rounded-se-[18px] bg-(--rail-surface)', CAP)}
-                    />
                   </li>
                 );
-              }
-
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    title={item.label}
-                    onClick={(event) => navigate(event, item.href)}
-                    className={cn(
-                      'group flex h-(--ctrl-h) items-center gap-sm rounded-2xl px-md text-sm',
-                      'me-sm ms-sm font-medium text-white/72',
-                      'transition-[transform,background-color,color,box-shadow] duration-200 ease-out',
-                      // Hover: the item leans toward the workspace and its
-                      // surface softens toward it — no scale, no pop.
-                      'hover:-translate-x-1.5 hover:bg-white/[0.12] hover:font-semibold hover:text-white',
-                      'hover:shadow-[-10px_0_26px_-14px_rgba(0,0,0,0.32)]',
-                      'focus-visible:outline-2 focus-visible:outline-white',
-                      'max-xl:mx-xs max-xl:justify-center max-xl:px-0',
-                    )}
-                  >
-                    {item.icon ? (
-                      <span className="shrink-0 opacity-85 transition-[transform,opacity] duration-200 ease-out group-hover:-translate-x-0.5 group-hover:opacity-100">
-                        {item.icon}
-                      </span>
-                    ) : null}
-                    <span className="truncate max-xl:sr-only">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
+              })}
           </ul>
         </div>
       ))}

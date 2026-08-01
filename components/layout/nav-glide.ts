@@ -16,6 +16,20 @@ export function isNavActive(pathname: string, href: string): boolean {
 }
 
 /**
+ * Item-level active detection: the item's own href plus any extra prefixes it
+ * claims (tabbed sections whose sibling routes live behind one rail item).
+ */
+export function isNavItemActive(
+  pathname: string,
+  item: { href: string; activePrefixes?: readonly string[] },
+): boolean {
+  return (
+    isNavActive(pathname, item.href) ||
+    (item.activePrefixes ?? []).some((prefix) => isNavActive(pathname, prefix))
+  );
+}
+
+/**
  * The carve glide. Wraps client navigation in a native view transition so the
  * dock (`.rail-dock`, see globals.css) morphs from the old section to the new
  * one. The API snapshots the real in-flow dock before and after the route
