@@ -18,14 +18,17 @@ import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
+  CloseIcon,
   ConfirmDialog,
   DocumentActionBar,
   DocumentStatus,
   ErrorState,
+  Field,
   MoneyDisplay,
   PencilIcon,
   PrinterIcon,
   Skeleton,
+  Textarea,
   TrashIcon,
   formatDate,
   useToast,
@@ -34,7 +37,9 @@ import {
 /**
  * CreditNoteDetail — read-only «إشعار دائن للمورد» view with the link back to
  * the corrected purchase (BDD-011 bidirectional traceability). Drafts get
- * edit/delete; posted notes are immutable.
+ * edit/delete; posted notes are immutable — their only exit is the reversal
+ * cancellation (BDD-011 amendment): a reasoned, audited status transition
+ * that freezes the content and removes the financial effect.
  */
 export function CreditNoteDetail({ noteId }: { noteId: string }) {
   const router = useRouter();
@@ -44,9 +49,14 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [products, setProducts] = useState<readonly Product[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const { run: load, error } = useOperation((id: string) => getCreditNoteService().getById(id));
   const del = useOperation((id: string) => getCreditNoteService().deleteDraft(id));
+  const cancelOp = useOperation((id: string, reason: string) =>
+    getCreditNoteService().cancel(id, reason),
+  );
   const { run: loadPurchase } = useOperation((id: string) => getPurchaseService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
   const { run: loadProducts } = useOperation(() => getProductService().list());
@@ -80,6 +90,23 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
     }
   }
 
+  async function handleCancel() {
+    const trimmed = cancelReason.trim();
+    if (trimmed === '') {
+      toast.show({ variant: 'error', message: 'سبب الإلغاء مطلوب' });
+      return;
+    }
+    const result = await cancelOp.run(noteId, trimmed);
+    if (result.ok) {
+      setConfirmCancel(false);
+      setCancelReason('');
+      setRecord(result.value);
+      toast.show({ variant: 'success', message: 'أُلغي الإشعار وزال أثره من رصيد المورد' });
+    } else {
+      toast.show({ variant: 'error', message: cancelOp.error ?? 'تعذّر إلغاء الإشعار' });
+    }
+  }
+
   useShortcut(
     'edit',
     () => router.push(`/credit-notes/${noteId}/edit`),
@@ -109,6 +136,8 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
   }
 
   const isDraft = record.status === CreditNoteStatus.Draft;
+  const isPosted = record.status === CreditNoteStatus.Posted;
+  const isCancelled = record.status === CreditNoteStatus.Cancelled;
   const title = isDraft ? 'مسودة إشعار دائن' : `إشعار دائن رقم ${record.number}`;
 
   return (
@@ -138,6 +167,17 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
                       icon: <PencilIcon />,
                       variant: 'secondary' as const,
                       onSelect: () => router.push(`/credit-notes/${record.id}/edit`),
+                    },
+                  ]
+                : []),
+              ...(isPosted
+                ? [
+                    {
+                      key: 'cancel',
+                      label: 'إلغاء…',
+                      icon: <CloseIcon />,
+                      variant: 'danger' as const,
+                      onSelect: () => setConfirmCancel(true),
                     },
                   ]
                 : []),
@@ -197,6 +237,20 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
               <dd className="text-sm">{record.notes}</dd>
             </div>
           ) : null}
+          {isCancelled ? (
+            <div className="flex flex-col gap-xs md:col-span-3">
+              <dt className="text-xs text-neutral-400">الإلغاء</dt>
+              <dd className="text-sm text-neutral-500">
+                {record.cancelReason}
+                {record.cancelledAt !== null ? (
+                  <>
+                    {' — '}
+                    <bdi dir="ltr">{formatDate(record.cancelledAt.slice(0, 10))}</bdi>
+                  </>
+                ) : null}
+              </dd>
+            </div>
+          ) : null}
         </dl>
       </Card>
 
@@ -235,6 +289,31 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
       >
         سيُحذف هذا المستند المسودة نهائيًا ولا يمكن التراجع. المسودّات لا تحمل رقمًا ولا أثرًا في
         الدفتر، لذا الحذف آمن محاسبيًا — وسيُسجَّل في سجل التدقيق.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        title="إلغاء الإشعار الدائن"
+        confirmLabel="إلغاء المستند"
+        danger
+        busy={cancelOp.pending}
+        onConfirm={() => void handleCancel()}
+        onCancel={() => setConfirmCancel(false)}
+      >
+        <div className="flex flex-col gap-md">
+          <p>
+            الإلغاء نهائي ولا يمكن التراجع عنه: يبقى المستند ورقمه مجمّدَين في السجل بوسم «ملغى»،
+            ويزول أثره من رصيد المورد ومن سقف التصحيح، ويُسجَّل الإلغاء وسببه في سجل التدقيق.
+          </p>
+          <Field label="سبب الإلغاء" required>
+            <Textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={2}
+              placeholder="مثال: أُدخل المستند بالخطأ أثناء التجربة"
+            />
+          </Field>
+        </div>
       </ConfirmDialog>
     </PageLayout>
   );

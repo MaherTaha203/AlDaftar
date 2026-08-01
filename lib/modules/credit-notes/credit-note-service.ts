@@ -124,6 +124,8 @@ export class CreditNoteService extends ApplicationService {
         createdAt: timestamp,
         updatedAt: timestamp,
         postedAt: null,
+        cancelledAt: null,
+        cancelReason: '',
       };
       const created = this.unwrap(await this.repository.create(draft));
       await getAuditService().record({
@@ -230,6 +232,54 @@ export class CreditNoteService extends ApplicationService {
         summary: 'حذف مسودة إشعار دائن',
         before: record,
       });
+    });
+  }
+
+  /**
+   * Reversal cancellation (BDD-011 amendment, owner-approved 2026-08-01):
+   * a POSTED note's financial effect is removed while its content, number,
+   * and history stay frozen forever — the cancellation itself is a recorded,
+   * reasoned event (audited with before/after), never an edit or a delete.
+   * Every derived figure excludes it automatically (posted-only filters),
+   * and the cancelled value returns to the purchase's correctable remainder.
+   */
+  cancel(id: string, reason: string): AsyncResult<CreditNote> {
+    return this.execute('credit-notes.cancel', async () => {
+      const record = await this.require(id);
+      if (record.status === CreditNoteStatus.Cancelled) {
+        throw ErrorFactory.conflict('The credit note is already cancelled', { id });
+      }
+      if (record.status !== CreditNoteStatus.Posted) {
+        throw ErrorFactory.conflict(
+          'Only posted credit notes can be cancelled — drafts are deleted',
+          {
+            id,
+          },
+        );
+      }
+      const trimmed = reason.trim();
+      if (trimmed === '') {
+        throw ErrorFactory.validation('A cancellation reason is required', { field: 'reason' });
+      }
+      const timestamp = nowIso();
+      const cancelled = this.unwrap(
+        await this.repository.update(id, {
+          status: CreditNoteStatus.Cancelled,
+          cancelledAt: timestamp,
+          cancelReason: trimmed,
+          updatedAt: timestamp,
+        }),
+      );
+      await getAuditService().record({
+        action: AuditAction.Update,
+        entityType: 'credit-notes',
+        entityId: cancelled.id,
+        entityLabel: noteLabel(cancelled),
+        summary: `إلغاء إشعار دائن رقم ${record.number} — ${trimmed}`,
+        before: record,
+        after: cancelled,
+      });
+      return cancelled;
     });
   }
 

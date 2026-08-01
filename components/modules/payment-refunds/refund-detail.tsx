@@ -18,14 +18,17 @@ import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
+  CloseIcon,
   ConfirmDialog,
   DocumentActionBar,
   DocumentStatus,
   ErrorState,
+  Field,
   MoneyDisplay,
   PencilIcon,
   PrinterIcon,
   Skeleton,
+  Textarea,
   TrashIcon,
   formatDate,
   useToast,
@@ -34,7 +37,9 @@ import {
 /**
  * RefundDetail — read-only «سند استرداد دفعة» view with the link back to the
  * refunded payment (BDD-011 bidirectional traceability). Drafts get
- * edit/delete; posted refunds are immutable.
+ * edit/delete; posted refunds are immutable — their only exit is the reversal
+ * cancellation (BDD-011 amendment): a reasoned, audited status transition
+ * that freezes the content and removes the financial effect.
  */
 export function RefundDetail({ refundId }: { refundId: string }) {
   const router = useRouter();
@@ -43,9 +48,14 @@ export function RefundDetail({ refundId }: { refundId: string }) {
   const [payment, setPayment] = useState<Payment | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const { run: load, error } = useOperation((id: string) => getPaymentRefundService().getById(id));
   const del = useOperation((id: string) => getPaymentRefundService().deleteDraft(id));
+  const cancelOp = useOperation((id: string, reason: string) =>
+    getPaymentRefundService().cancel(id, reason),
+  );
   const { run: loadPayment } = useOperation((id: string) => getPaymentService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
 
@@ -69,6 +79,23 @@ export function RefundDetail({ refundId }: { refundId: string }) {
       router.push('/payment-refunds');
     } else {
       toast.show({ variant: 'error', message: del.error ?? 'تعذّر حذف المسودة' });
+    }
+  }
+
+  async function handleCancel() {
+    const trimmed = cancelReason.trim();
+    if (trimmed === '') {
+      toast.show({ variant: 'error', message: 'سبب الإلغاء مطلوب' });
+      return;
+    }
+    const result = await cancelOp.run(refundId, trimmed);
+    if (result.ok) {
+      setConfirmCancel(false);
+      setCancelReason('');
+      setRecord(result.value);
+      toast.show({ variant: 'success', message: 'أُلغي السند وزال أثره من رصيد المورد' });
+    } else {
+      toast.show({ variant: 'error', message: cancelOp.error ?? 'تعذّر إلغاء السند' });
     }
   }
 
@@ -101,6 +128,8 @@ export function RefundDetail({ refundId }: { refundId: string }) {
   }
 
   const isDraft = record.status === PaymentRefundStatus.Draft;
+  const isPosted = record.status === PaymentRefundStatus.Posted;
+  const isCancelled = record.status === PaymentRefundStatus.Cancelled;
   const title = isDraft ? 'مسودة سند استرداد' : `سند استرداد رقم ${record.number}`;
 
   return (
@@ -130,6 +159,17 @@ export function RefundDetail({ refundId }: { refundId: string }) {
                       icon: <PencilIcon />,
                       variant: 'secondary' as const,
                       onSelect: () => router.push(`/payment-refunds/${record.id}/edit`),
+                    },
+                  ]
+                : []),
+              ...(isPosted
+                ? [
+                    {
+                      key: 'cancel',
+                      label: 'إلغاء…',
+                      icon: <CloseIcon />,
+                      variant: 'danger' as const,
+                      onSelect: () => setConfirmCancel(true),
                     },
                   ]
                 : []),
@@ -217,6 +257,20 @@ export function RefundDetail({ refundId }: { refundId: string }) {
               <dd className="text-sm">{record.notes}</dd>
             </div>
           ) : null}
+          {isCancelled ? (
+            <div className="flex flex-col gap-xs md:col-span-3">
+              <dt className="text-xs text-neutral-400">الإلغاء</dt>
+              <dd className="text-sm text-neutral-500">
+                {record.cancelReason}
+                {record.cancelledAt !== null ? (
+                  <>
+                    {' — '}
+                    <bdi dir="ltr">{formatDate(record.cancelledAt.slice(0, 10))}</bdi>
+                  </>
+                ) : null}
+              </dd>
+            </div>
+          ) : null}
         </dl>
       </Card>
 
@@ -237,6 +291,32 @@ export function RefundDetail({ refundId }: { refundId: string }) {
       >
         سيُحذف هذا المستند المسودة نهائيًا ولا يمكن التراجع. المسودّات لا تحمل رقمًا ولا أثرًا في
         الدفتر، لذا الحذف آمن محاسبيًا — وسيُسجَّل في سجل التدقيق.
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmCancel}
+        title="إلغاء سند الاسترداد"
+        confirmLabel="إلغاء المستند"
+        danger
+        busy={cancelOp.pending}
+        onConfirm={() => void handleCancel()}
+        onCancel={() => setConfirmCancel(false)}
+      >
+        <div className="flex flex-col gap-md">
+          <p>
+            الإلغاء نهائي ولا يمكن التراجع عنه: يبقى المستند ورقمه مجمّدَين في السجل بوسم «ملغى»،
+            ويزول أثره من رصيد المورد ويعود المبلغ إلى المتاح للاسترداد، ويُسجَّل الإلغاء وسببه في
+            سجل التدقيق.
+          </p>
+          <Field label="سبب الإلغاء" required>
+            <Textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={2}
+              placeholder="مثال: أُدخل المستند بالخطأ أثناء التجربة"
+            />
+          </Field>
+        </div>
       </ConfirmDialog>
     </PageLayout>
   );

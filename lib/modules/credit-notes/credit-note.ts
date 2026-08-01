@@ -16,6 +16,8 @@ import { roundAmount, sumAmounts } from '../shared/money';
 export const CreditNoteStatus = {
   Draft: 'draft',
   Posted: 'posted',
+  /** Reversal-cancelled (BDD-011 amendment): content frozen, effect removed. */
+  Cancelled: 'cancelled',
 } as const;
 
 export type CreditNoteStatus = (typeof CreditNoteStatus)[keyof typeof CreditNoteStatus];
@@ -69,6 +71,10 @@ export interface CreditNote {
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly postedAt: string | null;
+  /** Set by reversal cancellation; null while the document stands. */
+  readonly cancelledAt: string | null;
+  /** The owner's stated reason for the cancellation ('' while it stands). */
+  readonly cancelReason: string;
 }
 
 export interface CreditNoteAttributionInput {

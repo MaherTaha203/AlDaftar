@@ -55,12 +55,17 @@ export function RefundPrint({ refundId }: { refundId: string }) {
   }
 
   const isDraft = record.status === PaymentRefundStatus.Draft;
+  const isCancelled = record.status === PaymentRefundStatus.Cancelled;
   const total = refundTotalDebit(record);
   const originalNumber = paymentNumber.get(record.paymentId);
 
   return (
     <PrintLayout
-      title={isDraft ? 'سند استرداد دفعة (مسودة)' : `سند استرداد دفعة رقم ${record.number}`}
+      title={
+        isDraft
+          ? 'سند استرداد دفعة (مسودة)'
+          : `سند استرداد دفعة رقم ${record.number}${isCancelled ? ' (ملغى)' : ''}`
+      }
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
       meta={`التاريخ: ${formatDate(record.date)}`}

@@ -247,6 +247,8 @@ function creditNote(
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     postedAt: `${over.date}T10:00:00.000Z`,
+    cancelledAt: null,
+    cancelReason: '',
     ...over,
   };
 }
@@ -267,6 +269,8 @@ function paymentRefund(
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     postedAt: `${over.date}T10:00:00.000Z`,
+    cancelledAt: null,
+    cancelReason: '',
     ...over,
   };
 }
