@@ -11,7 +11,15 @@ import {
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
+import {
+  getPaymentRefundService,
+  refundTotalDebit,
+  PAYMENT_REFUND_REASON_LABELS,
+  type PaymentRefund,
+} from '@/lib/modules/payment-refunds';
 import { PageLayout, useShortcut } from '../../app';
+import { LinkedDocumentsSection, type LinkedDocumentRow } from '../shared/linked-documents';
+import { DocumentHistorySection } from '../shared/document-history';
 import { AttachmentsSection } from '../attachments';
 import { useOperation } from '../../framework';
 import {
@@ -45,6 +53,7 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
   const [payment, setPayment] = useState<Payment | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [linkedRefunds, setLinkedRefunds] = useState<readonly PaymentRefund[]>([]);
 
   const { run: load, error } = useOperation((id: string) => getPaymentService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
@@ -64,6 +73,9 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
   useEffect(() => {
     void load(paymentId).then((r) => r.ok && setPayment(r.value));
     void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
+    void getPaymentRefundService()
+      .listByPayment(paymentId)
+      .then((r) => r.ok && setLinkedRefunds(r.value));
   }, [paymentId, load, loadSuppliers]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
@@ -75,6 +87,18 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
     payment?.status === PaymentStatus.Draft,
   );
   useShortcut('delete', () => setConfirmDelete(true), payment?.status === PaymentStatus.Draft);
+
+  const linkedRows = useMemo<readonly LinkedDocumentRow[]>(
+    () =>
+      linkedRefunds.map((r) => ({
+        key: `refund-${r.id}`,
+        href: `/payment-refunds/${r.id}`,
+        title: r.number === null ? 'مسودة سند استرداد' : `سند استرداد رقم ${r.number}`,
+        subtitle: `${PAYMENT_REFUND_REASON_LABELS[r.reasonType]} · ${formatDate(r.date)}`,
+        aside: <MoneyDisplay value={refundTotalDebit(r)} />,
+      })),
+    [linkedRefunds],
+  );
 
   if (error !== null) {
     return (
@@ -226,6 +250,22 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
           allowDelete={isDraft}
         />
       </div>
+
+      <LinkedDocumentsSection rows={linkedRows} />
+
+      <DocumentHistorySection
+        entityType="payments"
+        entityId={payment.id}
+        attachmentOwnerType={AttachmentOwnerTypes.Payment}
+        derived={linkedRefunds.map((r) => ({
+          key: `refund-${r.id}`,
+          href: `/payment-refunds/${r.id}`,
+          label:
+            r.number === null ? 'أُنشئت مسودة سند استرداد' : `اشتُقّ سند استرداد رقم ${r.number}`,
+          timestamp: r.createdAt,
+        }))}
+        notes={payment.notes}
+      />
 
       <ConfirmDialog
         open={confirmDelete}

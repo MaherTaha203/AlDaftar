@@ -14,6 +14,7 @@ import { getPaymentService, type Payment } from '@/lib/modules/payments';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { PageLayout, useShortcut } from '../../app';
+import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
@@ -218,6 +219,12 @@ export function RefundDetail({ refundId }: { refundId: string }) {
           ) : null}
         </dl>
       </Card>
+
+      <DocumentHistorySection
+        entityType="payment-refunds"
+        entityId={record.id}
+        notes={record.notes}
+      />
 
       <ConfirmDialog
         open={confirmDelete}
