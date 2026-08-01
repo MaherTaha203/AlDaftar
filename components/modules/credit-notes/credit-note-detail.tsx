@@ -14,6 +14,7 @@ import { getPurchaseService, type Purchase } from '@/lib/modules/purchases';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { PageLayout, useShortcut } from '../../app';
+import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
@@ -220,6 +221,8 @@ export function CreditNoteDetail({ noteId }: { noteId: string }) {
           </ul>
         </Card>
       ) : null}
+
+      <DocumentHistorySection entityType="credit-notes" entityId={record.id} notes={record.notes} />
 
       <ConfirmDialog
         open={confirmDelete}

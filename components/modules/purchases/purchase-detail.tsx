@@ -15,8 +15,20 @@ import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { getSupplierService, type Supplier } from '@/lib/modules/suppliers';
 import { getUnitService, type Unit } from '@/lib/modules/units';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
+import {
+  getPurchaseReturnService,
+  returnTotal,
+  type PurchaseReturn,
+} from '@/lib/modules/purchase-returns';
+import {
+  getCreditNoteService,
+  CREDIT_NOTE_REASON_LABELS,
+  type CreditNote,
+} from '@/lib/modules/credit-notes';
 import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
+import { LinkedDocumentsSection, type LinkedDocumentRow } from '../shared/linked-documents';
+import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
@@ -57,6 +69,8 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
   const [products, setProducts] = useState<readonly Product[]>([]);
   const [units, setUnits] = useState<readonly Unit[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [linkedReturns, setLinkedReturns] = useState<readonly PurchaseReturn[]>([]);
+  const [linkedNotes, setLinkedNotes] = useState<readonly CreditNote[]>([]);
 
   const { run: load, error } = useOperation((id: string) => getPurchaseService().getById(id));
   const del = useOperation((id: string) => getPurchaseService().deleteDraft(id));
@@ -80,6 +94,12 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
     void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
     void loadProducts().then((r) => r.ok && setProducts(r.value));
     void loadUnits().then((r) => r.ok && setUnits(r.value));
+    void getPurchaseReturnService()
+      .listByPurchase(purchaseId)
+      .then((r) => r.ok && setLinkedReturns(r.value));
+    void getCreditNoteService()
+      .listByPurchase(purchaseId)
+      .then((r) => r.ok && setLinkedNotes(r.value));
   }, [purchaseId, load, loadSuppliers, loadProducts, loadUnits]);
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
@@ -121,6 +141,26 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
       },
     ],
     [productName, unitName],
+  );
+
+  const linkedRows = useMemo<readonly LinkedDocumentRow[]>(
+    () => [
+      ...linkedReturns.map((r) => ({
+        key: `return-${r.id}`,
+        href: `/purchase-returns/${r.id}`,
+        title: r.number === null ? 'مسودة مرتجع' : `مرتجع رقم ${r.number}`,
+        subtitle: `مرتجع شراء · ${formatDate(r.date)}`,
+        aside: <MoneyDisplay value={returnTotal(r.lines)} />,
+      })),
+      ...linkedNotes.map((n) => ({
+        key: `note-${n.id}`,
+        href: `/credit-notes/${n.id}`,
+        title: n.number === null ? 'مسودة إشعار دائن' : `إشعار دائن رقم ${n.number}`,
+        subtitle: `${CREDIT_NOTE_REASON_LABELS[n.reasonType]} · ${formatDate(n.date)}`,
+        aside: <MoneyDisplay value={n.amount} />,
+      })),
+    ],
+    [linkedReturns, linkedNotes],
   );
 
   if (error !== null) {
@@ -266,6 +306,30 @@ export function PurchaseDetail({ purchaseId }: PurchaseDetailProps) {
           allowDelete={isDraft}
         />
       </div>
+
+      <LinkedDocumentsSection rows={linkedRows} />
+
+      <DocumentHistorySection
+        entityType="purchases"
+        entityId={purchase.id}
+        attachmentOwnerType={AttachmentOwnerTypes.Purchase}
+        derived={[
+          ...linkedReturns.map((r) => ({
+            key: `return-${r.id}`,
+            href: `/purchase-returns/${r.id}`,
+            label: r.number === null ? 'أُنشئت مسودة مرتجع' : `اشتُقّ مرتجع رقم ${r.number}`,
+            timestamp: r.createdAt,
+          })),
+          ...linkedNotes.map((n) => ({
+            key: `note-${n.id}`,
+            href: `/credit-notes/${n.id}`,
+            label:
+              n.number === null ? 'أُنشئت مسودة إشعار دائن' : `اشتُقّ إشعار دائن رقم ${n.number}`,
+            timestamp: n.createdAt,
+          })),
+        ]}
+        notes={purchase.notes}
+      />
 
       <ConfirmDialog
         open={confirmDelete}

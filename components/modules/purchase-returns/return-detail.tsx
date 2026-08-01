@@ -19,6 +19,7 @@ import { getUnitService, type Unit } from '@/lib/modules/units';
 import { AttachmentOwnerTypes } from '@/lib/modules/attachments';
 import { PageLayout, useShortcut } from '../../app';
 import { AttachmentsSection } from '../attachments';
+import { DocumentHistorySection } from '../shared/document-history';
 import { useOperation } from '../../framework';
 import {
   Card,
@@ -247,6 +248,13 @@ export function ReturnDetail({ returnId }: ReturnDetailProps) {
           allowDelete={isDraft}
         />
       </div>
+
+      <DocumentHistorySection
+        entityType="purchase-returns"
+        entityId={record.id}
+        attachmentOwnerType={AttachmentOwnerTypes.PurchaseReturn}
+        notes={record.notes}
+      />
 
       <ConfirmDialog
         open={confirmDelete}
