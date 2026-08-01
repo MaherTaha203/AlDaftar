@@ -2,9 +2,10 @@
  * Reporting read-model — pure aggregations (business-architecture R1 "derived
  * read models": rebuildable, never hand-corrected, write nothing). Every
  * figure is calculated from POSTED documents only, per the approved rules
- * (01_System_Workflow.md §0.2): supplier balance = purchases − returns −
- * payments (− payment discounts); inventory = posted purchase qty − posted
- * return qty. Opening balances are 0 until BDR-06 is decided.
+ * (01_System_Workflow.md §0.2, BDD-011): supplier balance = purchases −
+ * returns − supplier credit notes − payments (amount + discount) + payment
+ * refunds (amount + discountReversal); inventory = posted purchase qty −
+ * posted return qty. Opening balances are 0 until BDR-06 is decided.
  *
  * These functions take plain document/master arrays and return plain data —
  * no I/O, fully unit-testable. The ReportingService loads the snapshot; the
@@ -17,6 +18,8 @@ import { purchaseTotal } from '@/lib/modules/purchases';
 import type { PurchaseReturn } from '@/lib/modules/purchase-returns';
 import { returnTotal } from '@/lib/modules/purchase-returns';
 import type { Payment } from '@/lib/modules/payments';
+import type { CreditNote } from '@/lib/modules/credit-notes';
+import type { PaymentRefund } from '@/lib/modules/payment-refunds';
 import type { Supplier } from '@/lib/modules/suppliers';
 import type { Product } from '@/lib/modules/products';
 import type { Category } from '@/lib/modules/categories';
@@ -31,6 +34,8 @@ export interface ReportingSnapshot {
   readonly purchases: readonly Purchase[];
   readonly returns: readonly PurchaseReturn[];
   readonly payments: readonly Payment[];
+  readonly creditNotes: readonly CreditNote[];
+  readonly paymentRefunds: readonly PaymentRefund[];
   readonly suppliers: readonly Supplier[];
   readonly products: readonly Product[];
   readonly categories: readonly Category[];
@@ -77,16 +82,17 @@ function byDateThenPosting(
 
 // ── Suppliers ──────────────────────────────────────────────────────────────
 
-export type LedgerKind = 'purchase' | 'return' | 'payment' | 'discount';
+export type LedgerKind =
+  'purchase' | 'return' | 'credit-note' | 'payment' | 'discount' | 'refund' | 'discount-reversal';
 
 export interface StatementRow {
   readonly kind: LedgerKind;
   readonly date: string;
   readonly number: number | null;
   readonly documentId: string;
-  /** Increases payable (purchases). */
+  /** Increases payable (purchases, payment refunds). */
   readonly debit: number;
-  /** Decreases payable (returns, payments, settlement discounts). */
+  /** Decreases payable (returns, credit notes, payments, settlement discounts). */
   readonly credit: number;
   readonly balance: number;
 }
@@ -108,7 +114,10 @@ export interface SupplierStatement {
  */
 function carriedForward(
   supplierId: string,
-  snap: Pick<ReportingSnapshot, 'purchases' | 'returns' | 'payments'>,
+  snap: Pick<
+    ReportingSnapshot,
+    'purchases' | 'returns' | 'payments' | 'creditNotes' | 'paymentRefunds'
+  >,
   from: string,
 ): number {
   const amounts: number[] = [];
@@ -127,13 +136,26 @@ function carriedForward(
       amounts.push(-pay.amount, -pay.discount);
     }
   }
+  for (const note of snap.creditNotes) {
+    if (isPosted(note) && note.supplierId === supplierId && note.date < from) {
+      amounts.push(-note.amount);
+    }
+  }
+  for (const refund of snap.paymentRefunds) {
+    if (isPosted(refund) && refund.supplierId === supplierId && refund.date < from) {
+      amounts.push(refund.amount, refund.discountReversal);
+    }
+  }
   return sumAmounts(amounts);
 }
 
 /** R-S1 Supplier Statement. `opening` is the pre-system seed (0 until BDR-06). */
 export function buildSupplierStatement(
   supplierId: string,
-  snap: Pick<ReportingSnapshot, 'purchases' | 'returns' | 'payments'>,
+  snap: Pick<
+    ReportingSnapshot,
+    'purchases' | 'returns' | 'payments' | 'creditNotes' | 'paymentRefunds'
+  >,
   range: DateRange = {},
   opening = 0,
 ): SupplierStatement {
@@ -202,6 +224,46 @@ export function buildSupplierStatement(
     }
   }
 
+  for (const note of snap.creditNotes) {
+    if (isPosted(note) && note.supplierId === supplierId && inRange(note.date, range)) {
+      raws.push({
+        kind: 'credit-note',
+        date: note.date,
+        postedAt: note.postedAt,
+        number: note.number,
+        documentId: note.id,
+        debit: 0,
+        credit: note.amount,
+      });
+    }
+  }
+  for (const refund of snap.paymentRefunds) {
+    if (isPosted(refund) && refund.supplierId === supplierId && inRange(refund.date, range)) {
+      if (refund.amount > 0) {
+        raws.push({
+          kind: 'refund',
+          date: refund.date,
+          postedAt: refund.postedAt,
+          number: refund.number,
+          documentId: refund.id,
+          debit: refund.amount,
+          credit: 0,
+        });
+      }
+      if (refund.discountReversal > 0) {
+        raws.push({
+          kind: 'discount-reversal',
+          date: refund.date,
+          postedAt: refund.postedAt,
+          number: refund.number,
+          documentId: refund.id,
+          debit: refund.discountReversal,
+          credit: 0,
+        });
+      }
+    }
+  }
+
   raws.sort(byDateThenPosting);
 
   let balance = opening;
@@ -239,7 +301,10 @@ export interface SupplierBalance {
 
 /** R-S2 Supplier Balances, as-of a date (inclusive; default: all history). */
 export function computeSupplierBalances(
-  snap: Pick<ReportingSnapshot, 'purchases' | 'returns' | 'payments' | 'suppliers'>,
+  snap: Pick<
+    ReportingSnapshot,
+    'purchases' | 'returns' | 'payments' | 'creditNotes' | 'paymentRefunds' | 'suppliers'
+  >,
   asOf?: string | null,
 ): SupplierBalance[] {
   const range: DateRange = { to: asOf ?? null };
@@ -274,6 +339,18 @@ export function computeSupplierBalances(
     if (isPosted(pay) && inRange(pay.date, range)) {
       add(credit, pay.supplierId, sumAmounts([pay.amount, pay.discount]));
       touch(pay.supplierId, pay.date);
+    }
+  }
+  for (const note of snap.creditNotes) {
+    if (isPosted(note) && inRange(note.date, range)) {
+      add(credit, note.supplierId, note.amount);
+      touch(note.supplierId, note.date);
+    }
+  }
+  for (const refund of snap.paymentRefunds) {
+    if (isPosted(refund) && inRange(refund.date, range)) {
+      add(debit, refund.supplierId, sumAmounts([refund.amount, refund.discountReversal]));
+      touch(refund.supplierId, refund.date);
     }
   }
 

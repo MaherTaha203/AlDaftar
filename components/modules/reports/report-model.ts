@@ -89,6 +89,9 @@ export const OWNER_TYPE_LABEL: Record<string, string> = {
 export const LEDGER_KIND_LABEL: Record<string, string> = {
   purchase: 'فاتورة شراء',
   return: 'مرتجع',
+  'credit-note': 'إشعار دائن',
   payment: 'دفعة',
   discount: 'خصم',
+  refund: 'استرداد دفعة',
+  'discount-reversal': 'إلغاء خصم',
 };

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Purchase } from '@/lib/modules/purchases';
 import type { PurchaseReturn } from '@/lib/modules/purchase-returns';
 import type { Payment } from '@/lib/modules/payments';
+import type { CreditNote } from '@/lib/modules/credit-notes';
+import type { PaymentRefund } from '@/lib/modules/payment-refunds';
 import type { Supplier } from '@/lib/modules/suppliers';
 import type { Product } from '@/lib/modules/products';
 import {
@@ -101,6 +103,8 @@ function snapshot(over: Partial<ReportingSnapshot>): ReportingSnapshot {
     purchases: [],
     returns: [],
     payments: [],
+    creditNotes: [],
+    paymentRefunds: [],
     suppliers: [],
     products: [],
     categories: [],
@@ -221,6 +225,109 @@ describe('computeSupplierBalances', () => {
     expect(s1?.balance).toBe(30);
     expect(s1?.lastDate).toBe('2026-01-20');
     expect(s2?.balance).toBe(0);
+  });
+});
+
+/*
+ * BDD-011 correction documents in the derived read model: credit notes are
+ * credit, refunds are debit (both components), drafts contribute nothing,
+ * and pre-range history carries into the opening balance.
+ */
+function creditNote(
+  over: Partial<CreditNote> & Pick<CreditNote, 'id' | 'supplierId' | 'date' | 'amount'>,
+): CreditNote {
+  return {
+    number: 1,
+    status: 'posted',
+    purchaseId: 'p1',
+    reasonType: 'wrong-price',
+    reasonNote: '',
+    attributions: [],
+    notes: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    postedAt: `${over.date}T10:00:00.000Z`,
+    ...over,
+  };
+}
+
+function paymentRefund(
+  over: Partial<PaymentRefund> & Pick<PaymentRefund, 'id' | 'supplierId' | 'date' | 'amount'>,
+): PaymentRefund {
+  return {
+    number: 1,
+    status: 'posted',
+    paymentId: 'pay1',
+    discountReversal: 0,
+    reasonType: 'money-returned',
+    reasonNote: '',
+    method: '',
+    reference: '',
+    notes: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    postedAt: `${over.date}T10:00:00.000Z`,
+    ...over,
+  };
+}
+
+describe('BDD-011 corrections in balances and statements', () => {
+  // purchase 200 − payment (40 + 10 discount) − credit note 30
+  // + refund (15 cash + 5 discount reversal) = 140.
+  const corrections = snapshot({
+    suppliers: [supplier('s1', 'مورد')],
+    purchases: [
+      purchase({
+        id: 'p1',
+        supplierId: 's1',
+        date: '2026-01-05',
+        lines: [{ id: 'l1', productId: 'a', unitId: 'u1', quantity: 2, unitPrice: 100, notes: '' }],
+      }),
+    ],
+    payments: [
+      payment({ id: 'pay1', supplierId: 's1', date: '2026-01-10', amount: 40, discount: 10 }),
+    ],
+    creditNotes: [
+      creditNote({ id: 'cn1', supplierId: 's1', date: '2026-01-12', amount: 30 }),
+      creditNote({ id: 'cn2', supplierId: 's1', date: '2026-01-13', amount: 999, status: 'draft' }),
+    ],
+    paymentRefunds: [
+      paymentRefund({
+        id: 'rf1',
+        supplierId: 's1',
+        date: '2026-01-15',
+        amount: 15,
+        discountReversal: 5,
+      }),
+    ],
+  });
+
+  it('balance = purchases − returns − credit notes − payments + refunds (drafts ignored)', () => {
+    const balances = computeSupplierBalances(corrections);
+    expect(balances.find((b) => b.supplierId === 's1')?.balance).toBe(140);
+  });
+
+  it('statement shows the credit note as credit and both refund components as debit', () => {
+    const statement = buildSupplierStatement('s1', corrections);
+    expect(statement.rows.map((r) => r.kind)).toEqual([
+      'purchase',
+      'payment',
+      'discount',
+      'credit-note',
+      'refund',
+      'discount-reversal',
+    ]);
+    // 200 → 160 → 150 → 120 → 135 → 140.
+    expect(statement.rows.map((r) => r.balance)).toEqual([200, 160, 150, 120, 135, 140]);
+    expect(statement.closing).toBe(140);
+  });
+
+  it('carries correction documents before `from` into the opening balance', () => {
+    const ranged = buildSupplierStatement('s1', corrections, { from: '2026-01-14' });
+    // Before the 14th: 200 − 50 − 30 = 120; the refund (+20) falls inside.
+    expect(ranged.opening).toBe(120);
+    expect(ranged.rows.map((r) => r.kind)).toEqual(['refund', 'discount-reversal']);
+    expect(ranged.closing).toBe(140);
   });
 });
 
