@@ -6,6 +6,7 @@ import { getUnitRepository } from '../units';
 import { MasterStatus } from '../shared/master-data';
 import { newRecordId, nowIso, type LocalRecordStore } from '../shared/local-record-store';
 import { RepositoryFactory } from '../shared/repository-factory';
+import { assertMutableDraft, nextDocumentNumber } from '../shared/document-kit';
 import { isValidIsoDate } from '../shared/dates';
 import { AuditAction, getAuditService } from '../audit';
 import {
@@ -223,12 +224,7 @@ export class PurchaseService extends ApplicationService {
    * Supabase implementation will honor the same rule transactionally.
    */
   private async nextNumber(): Promise<number> {
-    const purchases = this.unwrap(await this.repository.findAll());
-    const highest = purchases.reduce(
-      (max, p) => (p.number !== null && p.number > max ? p.number : max),
-      0,
-    );
-    return highest + 1;
+    return nextDocumentNumber(this.unwrap(await this.repository.findAll()));
   }
 
   private sanitizeDraft(input: PurchaseDraftInput) {
@@ -260,9 +256,7 @@ export class PurchaseService extends ApplicationService {
   }
 
   private assertDraft(purchase: Purchase): void {
-    if (purchase.status !== PurchaseStatus.Draft) {
-      throw ErrorFactory.conflict('Posted purchases are immutable', { id: purchase.id });
-    }
+    assertMutableDraft(purchase, PurchaseStatus.Draft, 'Posted purchases are immutable');
   }
 
   private unwrap<T>(result: Result<T>): T {

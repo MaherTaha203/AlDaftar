@@ -4,6 +4,7 @@ import { MasterStatus } from '../shared/master-data';
 import { newRecordId, nowIso, type LocalRecordStore } from '../shared/local-record-store';
 import { roundAmount } from '../shared/money';
 import { RepositoryFactory } from '../shared/repository-factory';
+import { assertMutableDraft, nextDocumentNumber } from '../shared/document-kit';
 import { isValidIsoDate } from '../shared/dates';
 import { getSupplierRepository } from '../suppliers';
 import { AuditAction, getAuditService } from '../audit';
@@ -179,10 +180,7 @@ export class PaymentService extends ApplicationService {
 
   /** Next Payment number (BDR-01: the type's own plain sequence). */
   private async nextNumber(): Promise<number> {
-    const payments = this.unwrap(await this.repository.findAll());
-    return (
-      payments.reduce((max, p) => (p.number !== null && p.number > max ? p.number : max), 0) + 1
-    );
+    return nextDocumentNumber(this.unwrap(await this.repository.findAll()));
   }
 
   private sanitize(input: PaymentDraftInput) {
@@ -207,9 +205,7 @@ export class PaymentService extends ApplicationService {
   }
 
   private assertDraft(payment: Payment): void {
-    if (payment.status !== PaymentStatus.Draft) {
-      throw ErrorFactory.conflict('Posted payments are immutable', { id: payment.id });
-    }
+    assertMutableDraft(payment, PaymentStatus.Draft, 'Posted payments are immutable');
   }
 
   private unwrap<T>(result: Result<T>): T {
