@@ -27,15 +27,20 @@ method, reference, or notes; renumbering; un-posting; deleting.
 a **new document**, never by editing history. The correct instrument depends
 on the mistake:
 
-| Mistake                                               | Correction                                                                                                                                                                                                                                                                                                          |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Paid too little                                       | A **new payment** for the remainder. [Business Rule]                                                                                                                                                                                                                                                                |
-| Paid the wrong supplier, or paid too much / duplicate | **[Decision Pending — BDR-07]** (void policy). Reversing cash out needs either a void of the posted payment or a supplier refund receipt (05 §5). Neither is approved yet; until then the frozen rule is: the posted payment stands and the correction instrument is deferred. No editing/deleting is ever allowed. |
-| Wrong discount recorded                               | Same as above — deferred to BDR-07; the payment is not edited.                                                                                                                                                                                                                                                      |
+| Mistake                                               | Correction                                                                                                                                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paid too little                                       | A **new payment** for the remainder. [Business Rule]                                                                                                                                  |
+| Paid the wrong supplier, or paid too much / duplicate | **Payment Refund «سند استرداد دفعة»** (BDD-011 / DL-036): a new linked document recording the money returned — cash `amount` capped at the payment's cash minus prior posted refunds. |
+| Wrong discount recorded                               | The refund's **discountReversal** component cancels payment-time discount (capped at the payment's discount minus prior reversals) — so a full reversal leaves no phantom credit.     |
 
-[Business Rule] Every correction, once its instrument is approved, will
-leave both the original and the correction visible and linked — the books
-never hide history (consistent with the purchase correction principle).
+Each refund carries a reason type (+ optional description). The posted
+payment itself is never edited; a wrong refund is corrected by a further
+document.
+
+[Business Rule] Every correction leaves both the original and the correction
+visible and linked — the books never hide history. Both directions are
+navigable via the Linked Documents section and the Document History
+(«سجلّ المستند»).
 
 ## 4. Relationship to allocation
 

@@ -38,16 +38,28 @@ kept (they affect nothing).
 
 ## 3. Correction strategy
 
-[Approved Fact] "Corrections are performed by Purchase Return."
+[Approved Fact — BDD-011 / DL-036, 2026-08-01] Corrections are performed by
+immutable linked documents under a strict boundary rule: **goods physically
+moved back → Purchase Return; only financial value changes → Supplier Credit
+Note «إشعار دائن للمورد»**. The two instruments never overlap. There is no
+void and no un-post — permanently.
 
-| Mistake discovered after posting                | Correction                                                                                                                                               |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Too much quantity received/recorded             | Return of the excess quantity (06).                                                                                                                      |
-| Wrong price / wrong totals agreed with supplier | Return + re-purchase at correct values, or settlement at payment time (approved payment-time discount) as the business chooses.                          |
-| Wrong supplier / duplicate document             | Full-quantity return neutralizes it; both documents remain in the books, linked (06 traceability). Voiding as a shortcut: **Decision Pending (BDR-07)**. |
+| Mistake discovered after posting                      | Correction                                                                                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Too much quantity received/recorded, goods going back | Return of the excess quantity (06).                                                                                             |
+| Over-billed price / supplier issued a credit          | **Supplier Credit Note** — value-only, decrease-only, with reason type (+ optional description) and optional line attributions. |
+| Invoiced line that never existed physically           | **Supplier Credit Note** for that line's value.                                                                                 |
+| Duplicate invoice / wrong supplier (no goods to move) | **Supplier Credit Note** for the full value; both documents remain in the books, linked.                                        |
+| Under-billed / additional money owed                  | A **new purchase invoice** — positive corrections do not exist.                                                                 |
+
+[Business Rule] Shared no-negative cap: posted credit notes on a purchase
+may never exceed `purchase total − posted returns value − prior posted
+credit notes` — a purchase's net value never goes below zero.
 
 [Business Rule] Every correction leaves both the mistake and the correction
-visible and linked — the books never hide history.
+visible and linked — the books never hide history. Both directions are
+navigable via the Linked Documents section and the Document History
+(«سجلّ المستند»).
 
 ## 4. Relationship with Purchase Return (summary)
 

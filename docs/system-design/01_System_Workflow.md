@@ -3,8 +3,9 @@
 > Design only. No implementation, no database, no APIs. Grounded in the
 > approved context: single company, single user, Arabic RTL, purchasing +
 > simple bookkeeping; Purchase = Goods Receipt; purchases immutable after
-> posting; corrections via Purchase Return; supplier balance, inventory, and
-> reports are calculated, never stored by hand.
+> posting; corrections via linked correction documents (BDD-011: Purchase
+> Return / Supplier Credit Note / Payment Refund); supplier balance,
+> inventory, and reports are calculated, never stored by hand.
 
 ## 0. Shared definitions
 
@@ -13,15 +14,18 @@
 All business documents (Purchase, Purchase Return, Payment) share one state
 model:
 
-| State      | Meaning                                                      | Allowed actions                                   |
-| ---------- | ------------------------------------------------------------ | ------------------------------------------------- |
-| **Draft**  | Being entered; has no official number; affects nothing.      | Edit, Delete (BDR-15), Post, Attach files         |
-| **Posted** | Official; immutable content; affects balances and inventory. | View, Print, Attach files (BDR-08), Create return |
+| State      | Meaning                                                      | Allowed actions                                                           |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| **Draft**  | Being entered; has no official number; affects nothing.      | Edit, Delete (BDR-15), Post, Attach files                                 |
+| **Posted** | Official; immutable content; affects balances and inventory. | View, Print, Attach files (BDR-08), Create correction documents (BDD-011) |
 
 State transitions: `(new) → Draft → Posted`. This lifecycle is **approved**
-(PD-17 / DL-020). There is no transition out of Posted. Whether a posted
-document can ever be voided is **BUSINESS DECISION REQUIRED (BDR-07)** — until
-decided, the only correction path is a Purchase Return (approved decision).
+(PD-17 / DL-020). There is no transition out of Posted — permanently:
+**BDR-07 is resolved (2026-08-01, BDD-011 / DL-036)** with correction
+_documents_, not a void status. A posted document is corrected only by a new
+linked document: Purchase Return (goods moved back), **Supplier Credit Note
+«إشعار دائن للمورد»** (financial value only), or **Payment Refund «سند
+استرداد دفعة»** (money returned by the supplier). Un-post never exists.
 
 > **Locked (deferred).** PD-17 also names a `Posted → Locked` state, but its
 > trigger and its effect beyond Posted's existing immutability are undefined,
@@ -33,7 +37,9 @@ decided, the only correction path is a Purchase Return (approved decision).
 ### 0.2 Calculated values (never entered, never stored by hand)
 
 - **Supplier balance** = opening balance (BDR-06) + posted purchases −
-  posted returns − posted payments (± discounts per BDR-03).
+  posted returns − posted supplier credit notes − posted payments
+  (amount + discount) + posted payment refunds (amount + discountReversal)
+  (BDD-011).
 - **Inventory quantity per product** = posted purchase quantities − posted
   return quantities.
 - **All report figures** are derived from posted documents at read time.
@@ -43,27 +49,27 @@ decided, the only correction path is a Purchase Return (approved decision).
 Referenced from every design document. Each item blocks only its own detail;
 the design continues around it.
 
-| ID     | BUSINESS DECISION REQUIRED                                                                                                                                                                          |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BDR-01 | **APPROVED (2026-07-04):** independent plain-integer sequence per document type (1, 2, 3…; no prefix/year), never reset, never reused, assigned only at posting; internal UUID hidden. See BDD-005. |
-| BDR-02 | **APPROVED (2026-07-04):** single bookkeeping currency ILS; 2 decimal places; half-up rounding; no foreign currency in v1 — currency fields hidden. See BDD-006.                                    |
-| BDR-03 | Discounts: where a supplier discount applies — per line, per document, at payment time, or several.                                                                                                 |
-| BDR-04 | Payment allocation: payments tied to specific purchases or recorded against the supplier balance.                                                                                                   |
-| BDR-05 | Payment methods list (cash, bank transfer, cheque, …).                                                                                                                                              |
-| BDR-06 | Supplier opening balances: allowed? source? editable after first posted document?                                                                                                                   |
-| BDR-07 | Void policy: may a posted document ever be voided, or are returns the only correction?                                                                                                              |
-| BDR-08 | Attachments: accepted types/sizes; may files on posted documents be replaced/deleted; retention.                                                                                                    |
-| BDR-09 | **RESOLVED (2026-07-04):** no tax system in v1 — tax is out of scope (PD-08). See DL-022.                                                                                                           |
-| BDR-10 | **APPROVED (2026-07-04):** fixed report catalog in `07_Report_Catalog.md`; every report supports Screen/Print/PDF/Excel; Supplier-Aging contents deferred. See DL-026 / BDD-009.                    |
-| BDR-11 | **APPROVED (2026-07-04):** immutable append-only trail of Create/Update/Delete/Post/Unpost/Login/Logout (Unpost/Login/Logout reserved, no producer yet). See DL-021 / BDD-010.                      |
-| BDR-12 | Backup/recovery expectations (acceptable data-loss window).                                                                                                                                         |
-| BDR-13 | Categories: flat list or hierarchy (tree).                                                                                                                                                          |
-| BDR-14 | Products: is a product code mandatory, and who defines it.                                                                                                                                          |
-| BDR-15 | Drafts: may a draft be deleted permanently, and is the deletion recorded in the audit log.                                                                                                          |
-| BDR-16 | Inventory: is negative calculated stock acceptable (e.g. return exceeding purchases), warn or block.                                                                                                |
-| BDR-17 | **APPROVED (2026-07-04):** Latin (Western) numerals 0–9 for amounts and numbers in UI and print. See DL-027.                                                                                        |
-| BDR-18 | **APPROVED (2026-07-04):** dates display as DD/MM/YYYY (Gregorian; no Hijri). ISO yyyy-mm-dd remains the storage form. See DL-028.                                                                  |
-| BDR-19 | **APPROVED (2026-07-04):** "amount in words" (Arabic) is required, shown only on printed documents. See DL-029.                                                                                     |
+| ID     | BUSINESS DECISION REQUIRED                                                                                                                                                                                       |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BDR-01 | **APPROVED (2026-07-04):** independent plain-integer sequence per document type (1, 2, 3…; no prefix/year), never reset, never reused, assigned only at posting; internal UUID hidden. See BDD-005.              |
+| BDR-02 | **APPROVED (2026-07-04):** single bookkeeping currency ILS; 2 decimal places; half-up rounding; no foreign currency in v1 — currency fields hidden. See BDD-006.                                                 |
+| BDR-03 | Discounts: where a supplier discount applies — per line, per document, at payment time, or several.                                                                                                              |
+| BDR-04 | Payment allocation: payments tied to specific purchases or recorded against the supplier balance.                                                                                                                |
+| BDR-05 | Payment methods list (cash, bank transfer, cheque, …).                                                                                                                                                           |
+| BDR-06 | Supplier opening balances: allowed? source? editable after first posted document?                                                                                                                                |
+| BDR-07 | **APPROVED (2026-08-01):** no void, no un-post — corrections are immutable linked documents: Purchase Return (physical), Supplier Credit Note (value-only, decrease-only), Payment Refund. See BDD-011 / DL-036. |
+| BDR-08 | Attachments: accepted types/sizes; may files on posted documents be replaced/deleted; retention.                                                                                                                 |
+| BDR-09 | **RESOLVED (2026-07-04):** no tax system in v1 — tax is out of scope (PD-08). See DL-022.                                                                                                                        |
+| BDR-10 | **APPROVED (2026-07-04):** fixed report catalog in `07_Report_Catalog.md`; every report supports Screen/Print/PDF/Excel; Supplier-Aging contents deferred. See DL-026 / BDD-009.                                 |
+| BDR-11 | **APPROVED (2026-07-04):** immutable append-only trail of Create/Update/Delete/Post/Unpost/Login/Logout (Unpost/Login/Logout reserved, no producer yet). See DL-021 / BDD-010.                                   |
+| BDR-12 | Backup/recovery expectations (acceptable data-loss window).                                                                                                                                                      |
+| BDR-13 | Categories: flat list or hierarchy (tree).                                                                                                                                                                       |
+| BDR-14 | Products: is a product code mandatory, and who defines it.                                                                                                                                                       |
+| BDR-15 | Drafts: may a draft be deleted permanently, and is the deletion recorded in the audit log.                                                                                                                       |
+| BDR-16 | Inventory: is negative calculated stock acceptable (e.g. return exceeding purchases), warn or block.                                                                                                             |
+| BDR-17 | **APPROVED (2026-07-04):** Latin (Western) numerals 0–9 for amounts and numbers in UI and print. See DL-027.                                                                                                     |
+| BDR-18 | **APPROVED (2026-07-04):** dates display as DD/MM/YYYY (Gregorian; no Hijri). ISO yyyy-mm-dd remains the storage form. See DL-028.                                                                               |
+| BDR-19 | **APPROVED (2026-07-04):** "amount in words" (Arabic) is required, shown only on printed documents. See DL-029.                                                                                                  |
 
 ## 1. Supplier workflows
 
@@ -124,12 +130,17 @@ audit-logged with before/after (BDR-11). Name uniqueness re-checked.
 
 ### 2.2 Correct a posted purchase
 
-Not possible by editing (approved). Paths:
+Not possible by editing (approved). Paths (BDD-011):
 
-- Quantity/price wrong, goods going back → **Purchase Return** (§3).
-- Wrong supplier / duplicate entry → **BDR-07** decides whether void exists;
-  until then the workaround is a full-quantity return, and the design keeps a
-  visible "corrected by return" link on both documents.
+- Goods physically going back → **Purchase Return** (§3).
+- Financial value only (over-billed price, invoiced-but-never-delivered
+  line, supplier credit, duplicate invoice) → **Supplier Credit Note
+  «إشعار دائن للمورد»** — value-only, decrease-only, capped so the
+  purchase's net value never goes negative across returns + notes.
+- Under-billed / additional money owed → a **new purchase invoice** (no
+  positive corrections).
+- Both documents stay in the books, linked and navigable in both directions
+  (Linked Documents section + Document History).
 
 ## 3. Purchase Return workflow
 
