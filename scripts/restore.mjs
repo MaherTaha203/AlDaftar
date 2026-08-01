@@ -64,6 +64,7 @@ const TABLES = [
   'purchase_returns',
   'payments',
   'supplier_credit_notes',
+  'payment_refunds',
   'custody',
   'custody_returns',
   'attachments',
