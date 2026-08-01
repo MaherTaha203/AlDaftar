@@ -130,7 +130,16 @@ export function PaymentDetail({ paymentId }: PaymentDetailProps) {
                       onSelect: () => router.push(`/payments/${payment.id}/edit`),
                     },
                   ]
-                : []),
+                : [
+                    // BDD-011: the payment is never edited — money returned by
+                    // the supplier becomes a linked refund document.
+                    {
+                      key: 'refund',
+                      label: 'إنشاء سند استرداد',
+                      variant: 'secondary' as const,
+                      onSelect: () => router.push(`/payment-refunds/new?payment=${payment.id}`),
+                    },
+                  ]),
               {
                 key: 'attachments',
                 label: 'المرفقات',

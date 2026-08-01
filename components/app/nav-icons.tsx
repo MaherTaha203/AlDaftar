@@ -167,3 +167,15 @@ export function SettingsIcon(props: NavIconProps) {
     </Svg>
   );
 }
+
+/** «التسويات» — correction documents (BDD-011): a balancing slider pair. */
+export function AdjustmentsIcon(props: NavIconProps) {
+  return (
+    <Svg {...props}>
+      <line x1="4" y1="8" x2="20" y2="8" />
+      <circle cx="9" cy="8" r="2.2" />
+      <line x1="4" y1="16" x2="20" y2="16" />
+      <circle cx="15" cy="16" r="2.2" />
+    </Svg>
+  );
+}

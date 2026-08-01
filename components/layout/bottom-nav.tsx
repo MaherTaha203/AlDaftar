@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../ui/cn';
-import { isNavActive, useNavGlide } from './nav-glide';
+import { isNavItemActive, useNavGlide } from './nav-glide';
 import type { SidebarGroup, SidebarItem } from './sidebar';
 
 /**
@@ -46,10 +46,10 @@ export function BottomNav({ groups, className }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const sheetRef = useRef<HTMLDialogElement>(null);
 
-  const items = groups.flatMap((group) => group.items);
+  const items = groups.flatMap((group) => group.items).filter((item) => !item.railHidden);
   const primary = items.filter((item) => item.mobilePrimary);
   const folded = items.filter((item) => !item.mobilePrimary);
-  const activeInFold = folded.some((item) => isNavActive(pathname, item.href));
+  const activeInFold = folded.some((item) => isNavItemActive(pathname, item));
 
   // The sheet is a native <dialog>: showModal() gives focus trapping,
   // Esc-to-close, and top-layer stacking for free (same pattern as Dialog).
@@ -95,7 +95,7 @@ export function BottomNav({ groups, className }: BottomNavProps) {
     >
       <ul className="flex h-[58px] items-stretch">
         {primary.map((item) => {
-          const active = isNavActive(pathname, item.href);
+          const active = isNavItemActive(pathname, item);
           if (active) {
             return (
               <li key={item.href} className={dockLi}>
@@ -178,7 +178,7 @@ export function BottomNav({ groups, className }: BottomNavProps) {
           />
           <ul className="grid grid-cols-2 gap-xs">
             {folded.map((item) => {
-              const active = isNavActive(pathname, item.href);
+              const active = isNavItemActive(pathname, item);
               return (
                 <li key={item.href} className="min-w-0">
                   <Link
