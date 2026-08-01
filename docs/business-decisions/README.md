@@ -11,18 +11,19 @@ engineering never invents business behavior; every unknown is marked
 Documents are processed in numeric order; later documents depend on earlier
 ones.
 
-| #       | Document                                            | Status in repository                                                                 |
-| ------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| BDD-001 | [placeholder](BDD-001-PLACEHOLDER.md)               | **Approved externally — pending verbatim import** (placeholder only; no content).    |
-| BDD-002 | [placeholder](BDD-002-PLACEHOLDER.md)               | **Approved externally — pending verbatim import** (placeholder only; no content).    |
-| BDD-003 | [Document Types](BDD-003-Document-Types.md)         | Template — awaiting PD-03/PD-04; lifecycle states `Draft → Posted` approved (DL-020) |
-| BDD-004 | [Payment Allocation](BDD-004-Payment-Allocation.md) | Approved (running-balance, DL-016)                                                   |
-| BDD-005 | [Numbering System](BDD-005-Numbering-System.md)     | Approved (DL-013)                                                                    |
-| BDD-006 | [Currency Rules](BDD-006-Currency-Rules.md)         | Approved (DL-014)                                                                    |
-| BDD-007 | [Attachments](BDD-007-Attachments.md)               | Template, awaiting business input (BDR-08)                                           |
-| BDD-008 | [Inventory Rules](BDD-008-Inventory-Rules.md)       | Template, awaiting business input                                                    |
-| BDD-009 | [Reporting](BDD-009-Reporting.md)                   | **Approved** (DL-026; Supplier-Aging contents deferred)                              |
-| BDD-010 | [Audit and Security](BDD-010-Audit-and-Security.md) | **Approved** (DL-021)                                                                |
+| #       | Document                                                | Status in repository                                                                 |
+| ------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| BDD-001 | [placeholder](BDD-001-PLACEHOLDER.md)                   | **Approved externally — pending verbatim import** (placeholder only; no content).    |
+| BDD-002 | [placeholder](BDD-002-PLACEHOLDER.md)                   | **Approved externally — pending verbatim import** (placeholder only; no content).    |
+| BDD-003 | [Document Types](BDD-003-Document-Types.md)             | Template — awaiting PD-03/PD-04; lifecycle states `Draft → Posted` approved (DL-020) |
+| BDD-004 | [Payment Allocation](BDD-004-Payment-Allocation.md)     | Approved (running-balance, DL-016)                                                   |
+| BDD-005 | [Numbering System](BDD-005-Numbering-System.md)         | Approved (DL-013)                                                                    |
+| BDD-006 | [Currency Rules](BDD-006-Currency-Rules.md)             | Approved (DL-014)                                                                    |
+| BDD-007 | [Attachments](BDD-007-Attachments.md)                   | Template, awaiting business input (BDR-08)                                           |
+| BDD-008 | [Inventory Rules](BDD-008-Inventory-Rules.md)           | Template, awaiting business input                                                    |
+| BDD-009 | [Reporting](BDD-009-Reporting.md)                       | **Approved** (DL-026; Supplier-Aging contents deferred)                              |
+| BDD-010 | [Audit and Security](BDD-010-Audit-and-Security.md)     | **Approved** (DL-021)                                                                |
+| BDD-011 | [Correction Documents](BDD-011-Correction-Documents.md) | **Approved** (DL-036; resolves BDR-07 — إشعار دائن للمورد + سند استرداد دفعة)        |
 
 ## Decisions with no dedicated BDD (recorded in the decision log)
 
