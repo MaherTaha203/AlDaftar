@@ -3,6 +3,8 @@ import { type AsyncResult, type Result } from '@/lib/core';
 import { getPurchaseService } from '@/lib/modules/purchases';
 import { getPurchaseReturnService } from '@/lib/modules/purchase-returns';
 import { getPaymentService } from '@/lib/modules/payments';
+import { getCreditNoteService } from '@/lib/modules/credit-notes';
+import { getPaymentRefundService } from '@/lib/modules/payment-refunds';
 import { getSupplierService } from '@/lib/modules/suppliers';
 import { getProductService } from '@/lib/modules/products';
 import { getCategoryService } from '@/lib/modules/categories';
@@ -30,6 +32,8 @@ export class ReportingService extends ApplicationService {
         purchases,
         returns,
         payments,
+        creditNotes,
+        paymentRefunds,
         suppliers,
         products,
         categories,
@@ -40,6 +44,8 @@ export class ReportingService extends ApplicationService {
         getPurchaseService().list(),
         getPurchaseReturnService().list(),
         getPaymentService().list(),
+        getCreditNoteService().list(),
+        getPaymentRefundService().list(),
         getSupplierService().list(),
         getProductService().list(),
         getCategoryService().list(),
@@ -52,6 +58,8 @@ export class ReportingService extends ApplicationService {
         purchases: this.unwrap(purchases),
         returns: this.unwrap(returns),
         payments: this.unwrap(payments),
+        creditNotes: this.unwrap(creditNotes),
+        paymentRefunds: this.unwrap(paymentRefunds),
         suppliers: this.unwrap(suppliers),
         products: this.unwrap(products),
         categories: this.unwrap(categories),
