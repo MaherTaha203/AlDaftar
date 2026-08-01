@@ -57,11 +57,16 @@ export function CreditNotePrint({ noteId }: { noteId: string }) {
   }
 
   const isDraft = record.status === CreditNoteStatus.Draft;
+  const isCancelled = record.status === CreditNoteStatus.Cancelled;
   const originalNumber = purchaseNumber.get(record.purchaseId);
 
   return (
     <PrintLayout
-      title={isDraft ? 'إشعار دائن للمورد (مسودة)' : `إشعار دائن للمورد رقم ${record.number}`}
+      title={
+        isDraft
+          ? 'إشعار دائن للمورد (مسودة)'
+          : `إشعار دائن للمورد رقم ${record.number}${isCancelled ? ' (ملغى)' : ''}`
+      }
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
       meta={`التاريخ: ${formatDate(record.date)}`}

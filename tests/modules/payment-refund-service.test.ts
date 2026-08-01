@@ -212,3 +212,59 @@ describe('basisForPayment', () => {
     expect(basis.remainingDiscount).toBe(40);
   });
 });
+
+describe('cancel — reversal cancellation (BDD-011 amendment)', () => {
+  it('cancels a posted refund: content frozen, reason and timestamp recorded', async () => {
+    const refund = unwrap(
+      await service.createDraft(draftInput({ amount: 400, discountReversal: 20 })),
+    );
+    const posted = unwrap(await service.post(refund.id));
+    const cancelled = unwrap(await service.cancel(refund.id, '  استرداد لم يتم فعليًا  '));
+    expect(cancelled.status).toBe(PaymentRefundStatus.Cancelled);
+    expect(cancelled.cancelReason).toBe('استرداد لم يتم فعليًا');
+    expect(cancelled.cancelledAt).not.toBeNull();
+    // Frozen content: number and components untouched.
+    expect(cancelled.number).toBe(posted.number);
+    expect(cancelled.amount).toBe(400);
+    expect(cancelled.discountReversal).toBe(20);
+  });
+
+  it('requires a non-empty reason', async () => {
+    const refund = unwrap(await service.createDraft(draftInput()));
+    unwrap(await service.post(refund.id));
+    expect(expectError(await service.cancel(refund.id, '   '))).toMatch(/reason is required/);
+  });
+
+  it('only posted refunds can be cancelled; a second cancel is blocked', async () => {
+    const draft = unwrap(await service.createDraft(draftInput()));
+    expect(expectError(await service.cancel(draft.id, 'سبب'))).toMatch(/Only posted/);
+    unwrap(await service.post(draft.id));
+    unwrap(await service.cancel(draft.id, 'سبب'));
+    expect(expectError(await service.cancel(draft.id, 'سبب آخر'))).toMatch(/already cancelled/);
+  });
+
+  it('a cancelled refund stays immutable and undeletable', async () => {
+    const refund = unwrap(await service.createDraft(draftInput()));
+    unwrap(await service.post(refund.id));
+    unwrap(await service.cancel(refund.id, 'سبب'));
+    expect(expectError(await service.updateDraft(refund.id, draftInput()))).toMatch(/immutable/);
+    expect(expectError(await service.deleteDraft(refund.id))).toMatch(/immutable/);
+  });
+
+  it('returns both components to the refundable remainders', async () => {
+    const refund = unwrap(
+      await service.createDraft(draftInput({ amount: 1000, discountReversal: 50 })),
+    );
+    unwrap(await service.post(refund.id)); // both remainders now 0
+    unwrap(await service.cancel(refund.id, 'إلغاء تجريبي'));
+    const basis = unwrap(await service.basisForPayment('PAY1'));
+    expect(basis.remainingCash).toBe(1000);
+    expect(basis.remainingDiscount).toBe(50);
+    // A full replacement can be posted — the number moves forward.
+    const replacement = unwrap(
+      await service.createDraft(draftInput({ amount: 1000, discountReversal: 50 })),
+    );
+    const posted = unwrap(await service.post(replacement.id));
+    expect(posted.number).toBe(2);
+  });
+});

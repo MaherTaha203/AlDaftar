@@ -27,6 +27,12 @@ linked document: Purchase Return (goods moved back), **Supplier Credit Note
 «إشعار دائن للمورد»** (financial value only), or **Payment Refund «سند
 استرداد دفعة»** (money returned by the supplier). Un-post never exists.
 
+> **One exception, on the adjustment documents only (DL-037):** a posted
+> credit note or payment refund may be **cancelled** («إلغاء») — a permanent,
+> reasoned, audited `Posted → Cancelled` transition that freezes the content
+> and number forever and removes only the financial effect (BDD-011
+> amendment). Originals (purchases, returns, payments) never gain this.
+
 > **Locked (deferred).** PD-17 also names a `Posted → Locked` state, but its
 > trigger and its effect beyond Posted's existing immutability are undefined,
 > it presupposes the reversal policy still open under BDR-07, and a

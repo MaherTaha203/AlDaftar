@@ -116,6 +116,8 @@ export class PaymentRefundService extends ApplicationService {
         createdAt: timestamp,
         updatedAt: timestamp,
         postedAt: null,
+        cancelledAt: null,
+        cancelReason: '',
       };
       const created = this.unwrap(await this.repository.create(draft));
       await getAuditService().record({
@@ -229,6 +231,51 @@ export class PaymentRefundService extends ApplicationService {
         summary: 'حذف مسودة سند استرداد',
         before: record,
       });
+    });
+  }
+
+  /**
+   * Reversal cancellation (BDD-011 amendment, owner-approved 2026-08-01):
+   * a POSTED refund's financial effect is removed while its content, number,
+   * and history stay frozen forever — the cancellation itself is a recorded,
+   * reasoned event (audited with before/after), never an edit or a delete.
+   * Every derived figure excludes it automatically (posted-only filters),
+   * and both components return to the payment's refundable remainders.
+   */
+  cancel(id: string, reason: string): AsyncResult<PaymentRefund> {
+    return this.execute('payment-refunds.cancel', async () => {
+      const record = await this.require(id);
+      if (record.status === PaymentRefundStatus.Cancelled) {
+        throw ErrorFactory.conflict('The refund is already cancelled', { id });
+      }
+      if (record.status !== PaymentRefundStatus.Posted) {
+        throw ErrorFactory.conflict('Only posted refunds can be cancelled — drafts are deleted', {
+          id,
+        });
+      }
+      const trimmed = reason.trim();
+      if (trimmed === '') {
+        throw ErrorFactory.validation('A cancellation reason is required', { field: 'reason' });
+      }
+      const timestamp = nowIso();
+      const cancelled = this.unwrap(
+        await this.repository.update(id, {
+          status: PaymentRefundStatus.Cancelled,
+          cancelledAt: timestamp,
+          cancelReason: trimmed,
+          updatedAt: timestamp,
+        }),
+      );
+      await getAuditService().record({
+        action: AuditAction.Update,
+        entityType: 'payment-refunds',
+        entityId: cancelled.id,
+        entityLabel: refundLabel(cancelled),
+        summary: `إلغاء سند استرداد رقم ${record.number} — ${trimmed}`,
+        before: record,
+        after: cancelled,
+      });
+      return cancelled;
     });
   }
 

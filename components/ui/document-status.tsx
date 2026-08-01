@@ -4,17 +4,23 @@ import { StatusBadge } from './status-badge';
  * DocumentStatus — 04_Component_Library.md §3. Maps the approved document
  * lifecycle states (01_System_Workflow.md §0.1: Draft → Posted) onto
  * StatusBadge tones with fixed Arabic labels, so every screen renders states
- * identically. A voided state is deliberately absent pending BDR-07.
+ * identically. `cancelled` is the reversal-cancellation state of ADJUSTMENT
+ * documents only (BDD-011 amendment, owner-approved 2026-08-01): the
+ * document's content stays frozen forever, its financial effect is removed.
  *
  * `MissingInvoiceBadge` is the informational «بدون فاتورة مورد» badge shown
  * on purchases received without a supplier invoice (a core monitoring
  * purpose of the system).
  */
-export type DocumentState = 'draft' | 'posted';
+export type DocumentState = 'draft' | 'posted' | 'cancelled';
 
-const stateBadge: Record<DocumentState, { tone: 'warning' | 'success'; label: string }> = {
+const stateBadge: Record<
+  DocumentState,
+  { tone: 'warning' | 'success' | 'neutral'; label: string }
+> = {
   draft: { tone: 'warning', label: 'مسودة' },
   posted: { tone: 'success', label: 'مرحّل' },
+  cancelled: { tone: 'neutral', label: 'ملغى' },
 };
 
 export interface DocumentStatusProps {

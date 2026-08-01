@@ -111,12 +111,41 @@ existing Purchase Return joins the framework as a pure refactor (also
 retiring the TD-006 `nextNumber()` duplication). Reason fields extend to the
 existing Purchase Return when it joins the framework (additive, optional).
 
+## Amendment — Reversal cancellation of adjustment documents (DL-037)
+
+Approved by the owner (2026-08-01) after live use surfaced the need to
+retract a posted adjustment document itself (a note/refund entered by
+mistake has no "further correction document" to correct it with).
+
+- **Scope: the two adjustment documents ONLY** — supplier credit notes and
+  payment refunds. Purchases, purchase returns, and payments remain
+  strictly without any cancellation path; their reversal instruments are
+  the correction documents themselves.
+- A **POSTED** adjustment document may be **cancelled** («إلغاء») — never
+  edited, never deleted, never renumbered. Cancellation is a permanent
+  status transition `posted → cancelled` recording `cancelledAt` and a
+  **required** `cancelReason`; the document's content and official number
+  stay frozen forever and the number is never reused.
+- The cancellation is itself an audited event (an `update` audit entry with
+  full before/after snapshots and the reason in the summary) — the
+  document's history shows it like any other event.
+- Effect is purely subtractive and automatic: every derived figure
+  (balances, statements, remaining-basis caps) already filters on
+  `status = 'posted'`, so a cancelled document simply drops out and its
+  value returns to the parent's correctable/refundable remainder.
+- Cancelled documents remain fully visible in lists, details, history and
+  print — marked «ملغى»; a printed cancelled document carries the marking
+  in its title.
+- Drafts are unaffected: a draft is still simply deleted.
+
 ## Explicitly out of scope / unchanged
 
 - No General Ledger, no document versioning, no editing posted documents.
-- No `void`/`cancelled` status on financial documents; `Unpost` remains a
-  reserved audit action **with no producer, permanently** — reversal happens
-  only through correction documents.
+- No `void`/`cancelled` status on the ORIGINAL financial documents
+  (purchases, returns, payments); `Unpost` remains a reserved audit action
+  **with no producer, permanently** — reversal of originals happens only
+  through correction documents. (The adjustment documents themselves gained
+  a reversal cancellation by the DL-037 amendment above.)
 - The deferred `Locked` state (DL-020) remains deferred — this decision
   removes its main prerequisite question but defines no lock trigger.
 - Payment allocation (BDD-004) unchanged.

@@ -261,3 +261,51 @@ describe('basisForPurchase', () => {
     expect(basis.remainingValue).toBe(500);
   });
 });
+
+describe('cancel — reversal cancellation (BDD-011 amendment)', () => {
+  it('cancels a posted note: content frozen, reason and timestamp recorded', async () => {
+    const note = unwrap(await service.createDraft(draftInput({ amount: 400 })));
+    const posted = unwrap(await service.post(note.id));
+    const cancelled = unwrap(await service.cancel(note.id, '  أُدخل بالخطأ  '));
+    expect(cancelled.status).toBe(CreditNoteStatus.Cancelled);
+    expect(cancelled.cancelReason).toBe('أُدخل بالخطأ');
+    expect(cancelled.cancelledAt).not.toBeNull();
+    // Frozen content: number and amount untouched.
+    expect(cancelled.number).toBe(posted.number);
+    expect(cancelled.amount).toBe(400);
+  });
+
+  it('requires a non-empty reason', async () => {
+    const note = unwrap(await service.createDraft(draftInput()));
+    unwrap(await service.post(note.id));
+    expect(expectError(await service.cancel(note.id, '   '))).toMatch(/reason is required/);
+  });
+
+  it('only posted notes can be cancelled; a second cancel is blocked', async () => {
+    const draft = unwrap(await service.createDraft(draftInput()));
+    expect(expectError(await service.cancel(draft.id, 'سبب'))).toMatch(/Only posted/);
+    unwrap(await service.post(draft.id));
+    unwrap(await service.cancel(draft.id, 'سبب'));
+    expect(expectError(await service.cancel(draft.id, 'سبب آخر'))).toMatch(/already cancelled/);
+  });
+
+  it('a cancelled note stays immutable and undeletable', async () => {
+    const note = unwrap(await service.createDraft(draftInput()));
+    unwrap(await service.post(note.id));
+    unwrap(await service.cancel(note.id, 'سبب'));
+    expect(expectError(await service.updateDraft(note.id, draftInput()))).toMatch(/immutable/);
+    expect(expectError(await service.deleteDraft(note.id))).toMatch(/immutable/);
+  });
+
+  it('returns the cancelled value to the correctable remainder', async () => {
+    const note = unwrap(await service.createDraft(draftInput({ amount: 1000 })));
+    unwrap(await service.post(note.id)); // remainder now 0
+    unwrap(await service.cancel(note.id, 'إلغاء تجريبي'));
+    const basis = unwrap(await service.basisForPurchase('P1'));
+    expect(basis.remainingValue).toBe(1000);
+    // And a full-value note can be posted again — the number moves forward.
+    const replacement = unwrap(await service.createDraft(draftInput({ amount: 1000 })));
+    const posted = unwrap(await service.post(replacement.id));
+    expect(posted.number).toBe(2);
+  });
+});
