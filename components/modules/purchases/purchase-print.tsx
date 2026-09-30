@@ -32,6 +32,7 @@ export function PurchasePrint({ purchaseId }: { purchaseId: string }) {
   const [products, setProducts] = useState<readonly Product[]>([]);
   const [units, setUnits] = useState<readonly Unit[]>([]);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getPurchaseService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
@@ -40,11 +41,29 @@ export function PurchasePrint({ purchaseId }: { purchaseId: string }) {
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(purchaseId).then((r) => r.ok && setPurchase(r.value));
-    void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
-    void loadProducts().then((r) => r.ok && setProducts(r.value));
-    void loadUnits().then((r) => r.ok && setUnits(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([
+      load(purchaseId),
+      loadSuppliers(),
+      loadProducts(),
+      loadUnits(),
+      loadProfile(),
+    ]).then(([purchaseResult, suppliersResult, productsResult, unitsResult, profileResult]) => {
+      if (
+        !purchaseResult.ok ||
+        !suppliersResult.ok ||
+        !productsResult.ok ||
+        !unitsResult.ok ||
+        !profileResult.ok
+      ) {
+        return;
+      }
+      setPurchase(purchaseResult.value);
+      setSuppliers(suppliersResult.value);
+      setProducts(productsResult.value);
+      setUnits(unitsResult.value);
+      setProfile(profileResult.value);
+      setReady(true);
+    });
   }, [purchaseId, load, loadSuppliers, loadProducts, loadUnits, loadProfile]);
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
@@ -64,6 +83,7 @@ export function PurchasePrint({ purchaseId }: { purchaseId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={isDraft ? 'فاتورة شراء (مسودة)' : `فاتورة شراء رقم ${purchase.number}`}
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}

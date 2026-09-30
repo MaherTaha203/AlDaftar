@@ -30,6 +30,7 @@ export function RefundPrint({ refundId }: { refundId: string }) {
   const [payments, setPayments] = useState<readonly Payment[]>([]);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getPaymentRefundService().getById(id));
   const { run: loadPayments } = useOperation(() => getPaymentService().list());
@@ -37,10 +38,18 @@ export function RefundPrint({ refundId }: { refundId: string }) {
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(refundId).then((r) => r.ok && setRecord(r.value));
-    void loadPayments().then((r) => r.ok && setPayments(r.value));
-    void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([load(refundId), loadPayments(), loadSuppliers(), loadProfile()]).then(
+      ([recordResult, paymentsResult, suppliersResult, profileResult]) => {
+        if (!recordResult.ok || !paymentsResult.ok || !suppliersResult.ok || !profileResult.ok) {
+          return;
+        }
+        setRecord(recordResult.value);
+        setPayments(paymentsResult.value);
+        setSuppliers(suppliersResult.value);
+        setProfile(profileResult.value);
+        setReady(true);
+      },
+    );
   }, [refundId, load, loadPayments, loadSuppliers, loadProfile]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
@@ -61,6 +70,7 @@ export function RefundPrint({ refundId }: { refundId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={
         isDraft
           ? 'سند استرداد دفعة (مسودة)'

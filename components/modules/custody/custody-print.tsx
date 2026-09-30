@@ -24,13 +24,20 @@ export function CustodyPrint({ custodyId }: { custodyId: string }) {
   const router = useRouter();
   const [basis, setBasis] = useState<CustodyBasis | null>(null);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getCustodyService().basis(id));
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(custodyId).then((r) => r.ok && setBasis(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([load(custodyId), loadProfile()]).then(([basisResult, profileResult]) => {
+      if (!basisResult.ok || !profileResult.ok) {
+        return;
+      }
+      setBasis(basisResult.value);
+      setProfile(profileResult.value);
+      setReady(true);
+    });
   }, [custodyId, load, loadProfile]);
 
   if (basis === null) {
@@ -46,6 +53,7 @@ export function CustodyPrint({ custodyId }: { custodyId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={isDraft ? 'سند استلام بضاعة (مسودة)' : `سند استلام بضاعة رقم ${custody.number}`}
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}

@@ -21,6 +21,8 @@ export interface PrintLayoutProps {
   draft?: boolean;
   onPrint?: () => void;
   onBack?: () => void;
+  /** Prevents printing until every required data source has finished loading. */
+  ready?: boolean;
 }
 
 export function PrintLayout({
@@ -36,8 +38,12 @@ export function PrintLayout({
   draft = false,
   onPrint,
   onBack,
+  ready = true,
 }: PrintLayoutProps) {
   function handlePrint() {
+    if (!ready) {
+      return;
+    }
     if (onPrint) {
       onPrint();
       return;
@@ -52,7 +58,9 @@ export function PrintLayout({
   return (
     <>
       <div className="screen-only sticky top-0 z-10 flex items-center justify-start gap-sm border-b border-neutral-200 bg-white px-lg py-md">
-        <Button onClick={handlePrint}>{uiText.print.print}</Button>
+        <Button onClick={handlePrint} disabled={!ready}>
+          {uiText.print.print}
+        </Button>
         {onBack ? (
           <Button variant="secondary" onClick={onBack}>
             {uiText.print.back}

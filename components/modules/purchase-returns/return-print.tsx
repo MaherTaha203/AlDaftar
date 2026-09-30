@@ -34,6 +34,7 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
   const [products, setProducts] = useState<readonly Product[]>([]);
   const [units, setUnits] = useState<readonly Unit[]>([]);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getPurchaseReturnService().getById(id));
   const { run: loadPurchases } = useOperation(() => getPurchaseService().list());
@@ -43,12 +44,41 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(returnId).then((r) => r.ok && setRecord(r.value));
-    void loadPurchases().then((r) => r.ok && setPurchases(r.value));
-    void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
-    void loadProducts().then((r) => r.ok && setProducts(r.value));
-    void loadUnits().then((r) => r.ok && setUnits(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([
+      load(returnId),
+      loadPurchases(),
+      loadSuppliers(),
+      loadProducts(),
+      loadUnits(),
+      loadProfile(),
+    ]).then(
+      ([
+        recordResult,
+        purchasesResult,
+        suppliersResult,
+        productsResult,
+        unitsResult,
+        profileResult,
+      ]) => {
+        if (
+          !recordResult.ok ||
+          !purchasesResult.ok ||
+          !suppliersResult.ok ||
+          !productsResult.ok ||
+          !unitsResult.ok ||
+          !profileResult.ok
+        ) {
+          return;
+        }
+        setRecord(recordResult.value);
+        setPurchases(purchasesResult.value);
+        setSuppliers(suppliersResult.value);
+        setProducts(productsResult.value);
+        setUnits(unitsResult.value);
+        setProfile(profileResult.value);
+        setReady(true);
+      },
+    );
   }, [returnId, load, loadPurchases, loadSuppliers, loadProducts, loadUnits, loadProfile]);
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
@@ -73,6 +103,7 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={isDraft ? 'مرتجع شراء (مسودة)' : `مرتجع شراء رقم ${record.number}`}
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
