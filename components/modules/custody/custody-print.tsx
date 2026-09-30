@@ -10,7 +10,7 @@ import {
 } from '@/lib/modules/settings';
 import { useOperation } from '@/components/framework';
 import { PrintLayout } from '@/components/layout';
-import { formatDate, Spinner } from '@/components/ui';
+import { formatDate, formatDateTime, Spinner } from '@/components/ui';
 import { CompanyHeader } from '../shared/company-header';
 
 /**
