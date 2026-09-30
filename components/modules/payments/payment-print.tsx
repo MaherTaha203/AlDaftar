@@ -22,15 +22,24 @@ export function PaymentPrint({ paymentId }: { paymentId: string }) {
   const [payment, setPayment] = useState<Payment | null>(null);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getPaymentService().getById(id));
   const { run: loadSuppliers } = useOperation(() => getSupplierService().list());
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(paymentId).then((r) => r.ok && setPayment(r.value));
-    void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([load(paymentId), loadSuppliers(), loadProfile()]).then(
+      ([paymentResult, suppliersResult, profileResult]) => {
+        if (!paymentResult.ok || !suppliersResult.ok || !profileResult.ok) {
+          return;
+        }
+        setPayment(paymentResult.value);
+        setSuppliers(suppliersResult.value);
+        setProfile(profileResult.value);
+        setReady(true);
+      },
+    );
   }, [paymentId, load, loadSuppliers, loadProfile]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
@@ -47,6 +56,7 @@ export function PaymentPrint({ paymentId }: { paymentId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={isDraft ? 'سند دفع (مسودة)' : `سند دفع رقم ${payment.number}`}
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
