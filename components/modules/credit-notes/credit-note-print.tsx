@@ -29,6 +29,7 @@ export function CreditNotePrint({ noteId }: { noteId: string }) {
   const [purchases, setPurchases] = useState<readonly Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<readonly Supplier[]>([]);
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [ready, setReady] = useState(false);
 
   const { run: load } = useOperation((id: string) => getCreditNoteService().getById(id));
   const { run: loadPurchases } = useOperation(() => getPurchaseService().list());
@@ -36,10 +37,18 @@ export function CreditNotePrint({ noteId }: { noteId: string }) {
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load(noteId).then((r) => r.ok && setRecord(r.value));
-    void loadPurchases().then((r) => r.ok && setPurchases(r.value));
-    void loadSuppliers().then((r) => r.ok && setSuppliers(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([load(noteId), loadPurchases(), loadSuppliers(), loadProfile()]).then(
+      ([recordResult, purchasesResult, suppliersResult, profileResult]) => {
+        if (!recordResult.ok || !purchasesResult.ok || !suppliersResult.ok || !profileResult.ok) {
+          return;
+        }
+        setRecord(recordResult.value);
+        setPurchases(purchasesResult.value);
+        setSuppliers(suppliersResult.value);
+        setProfile(profileResult.value);
+        setReady(true);
+      },
+    );
   }, [noteId, load, loadPurchases, loadSuppliers, loadProfile]);
 
   const supplierName = useMemo(() => new Map(suppliers.map((s) => [s.id, s.name])), [suppliers]);
@@ -62,6 +71,7 @@ export function CreditNotePrint({ noteId }: { noteId: string }) {
 
   return (
     <PrintLayout
+      ready={ready}
       title={
         isDraft
           ? 'إشعار دائن للمورد (مسودة)'
