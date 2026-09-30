@@ -53,22 +53,22 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
       loadProfile(),
     ]).then(
       ([recordResult, purchasesResult, suppliersResult, productsResult, unitsResult, profileResult]) => {
-      if (
-        !recordResult.ok ||
-        !purchasesResult.ok ||
-        !suppliersResult.ok ||
-        !productsResult.ok ||
-        !unitsResult.ok ||
-        !profileResult.ok
-      ) {
-        return;
-      }
-      setRecord(recordResult.value);
-      setPurchases(purchasesResult.value);
-      setSuppliers(suppliersResult.value);
-      setProducts(productsResult.value);
-      setUnits(unitsResult.value);
-      setProfile(profileResult.value);
+        if (
+          !recordResult.ok ||
+          !purchasesResult.ok ||
+          !suppliersResult.ok ||
+          !productsResult.ok ||
+          !unitsResult.ok ||
+          !profileResult.ok
+        ) {
+          return;
+        }
+        setRecord(recordResult.value);
+        setPurchases(purchasesResult.value);
+        setSuppliers(suppliersResult.value);
+        setProducts(productsResult.value);
+        setUnits(unitsResult.value);
+        setProfile(profileResult.value);
         setReady(true);
       },
     );
