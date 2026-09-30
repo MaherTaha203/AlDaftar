@@ -79,15 +79,7 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
         setReady(true);
       },
     );
-  }, [
-    returnId,
-    load,
-    loadPurchases,
-    loadSuppliers,
-    loadProducts,
-    loadUnits,
-    loadProfile,
-  ]);
+  }, [returnId, load, loadPurchases, loadSuppliers, loadProducts, loadUnits, loadProfile]);
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
   const unitName = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
