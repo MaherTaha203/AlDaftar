@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { getReportingService, type ReportingSnapshot } from '@/lib/modules/reporting';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
+import {
+  getSettingsService,
+  EMPTY_COMPANY_PROFILE,
+  type CompanyProfile,
+} from '@/lib/modules/settings';
 import { PageLayout } from '@/components/app';
 import { useOperation } from '@/components/framework';
 import { PrintLayout } from '@/components/layout';
@@ -17,8 +22,10 @@ import {
   Select,
   TableSkeleton,
   formatDate,
+  formatDateTime,
 } from '@/components/ui';
 import { findReport } from './report-registry';
+import { CompanyHeader } from '../shared/company-header';
 import type { ReportColumn, ReportParams, ReportResult, ParamKey } from './report-model';
 import { buildReportCsv, downloadCsv } from './report-export';
 
@@ -56,7 +63,7 @@ function renderCell(value: ReportResult['rows'][number][string], kind: ReportCol
 /** Read-only report table with an optional totals footer; used on screen and print. */
 function ReportTable({ result }: { result: ReportResult }) {
   return (
-    <div className="overflow-auto rounded-lg border border-neutral-200">
+    <div className="print-report-table overflow-auto rounded-lg border border-neutral-200">
       <table className="w-full border-collapse bg-white text-sm">
         <thead className="print-repeat-head">
           <tr className="border-b border-neutral-200 bg-neutral-100">
@@ -117,12 +124,15 @@ export function ReportView({ reportId }: { reportId: string }) {
   const report = findReport(reportId);
   const [snapshot, setSnapshot] = useState<ReportingSnapshot | null>(null);
   const [params, setParams] = useState<ReportParams>({});
+  const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
 
   const { run: load, pending, error } = useOperation(() => getReportingService().loadSnapshot());
+  const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
     void load().then((r) => r.ok && setSnapshot(r.value));
-  }, [load]);
+    void loadProfile().then((r) => r.ok && setProfile(r.value));
+  }, [load, loadProfile]);
 
   const result = useMemo<ReportResult | null>(() => {
     if (!report || !snapshot) {
@@ -147,7 +157,7 @@ export function ReportView({ reportId }: { reportId: string }) {
 
   const hasParam = (key: ParamKey) => report.params.includes(key);
 
-  const printedOn = formatDate(new Date().toISOString().slice(0, 10));
+  const printedOn = formatDateTime(new Date().toISOString());
   const canExport = !report.deferred && result !== null && result.rows.length > 0;
 
   return (
@@ -313,6 +323,7 @@ export function ReportView({ reportId }: { reportId: string }) {
           <PrintLayout
             title={report.title}
             orientation={report.orientation}
+            companyHeader={<CompanyHeader profile={profile} />}
             meta={
               result.meta && result.meta.length > 0
                 ? result.meta.map((m) => `${m.label}: ${m.value}`).join(' — ')
