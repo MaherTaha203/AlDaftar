@@ -125,13 +125,20 @@ export function ReportView({ reportId }: { reportId: string }) {
   const [snapshot, setSnapshot] = useState<ReportingSnapshot | null>(null);
   const [params, setParams] = useState<ReportParams>({});
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
+  const [profileReady, setProfileReady] = useState(false);
 
   const { run: load, pending, error } = useOperation(() => getReportingService().loadSnapshot());
   const { run: loadProfile } = useOperation(() => getSettingsService().getProfile());
 
   useEffect(() => {
-    void load().then((r) => r.ok && setSnapshot(r.value));
-    void loadProfile().then((r) => r.ok && setProfile(r.value));
+    void Promise.all([load(), loadProfile()]).then(([snapshotResult, profileResult]) => {
+      if (!snapshotResult.ok || !profileResult.ok) {
+        return;
+      }
+      setSnapshot(snapshotResult.value);
+      setProfile(profileResult.value);
+      setProfileReady(true);
+    });
   }, [load, loadProfile]);
 
   const result = useMemo<ReportResult | null>(() => {
@@ -179,7 +186,7 @@ export function ReportView({ reportId }: { reportId: string }) {
               </Button>
               <Button
                 variant="secondary"
-                disabled={report.deferred}
+                disabled={report.deferred || !profileReady || result === null}
                 onClick={() => typeof window !== 'undefined' && window.print()}
               >
                 طباعة / PDF
@@ -321,6 +328,7 @@ export function ReportView({ reportId }: { reportId: string }) {
       {result && !result.notice && result.rows.length > 0 ? (
         <div className="print-only">
           <PrintLayout
+            ready={profileReady}
             title={report.title}
             orientation={report.orientation}
             companyHeader={<CompanyHeader profile={profile} />}
