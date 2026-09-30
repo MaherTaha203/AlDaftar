@@ -93,6 +93,12 @@
     right: 0;
     z-index: 10;
   }
+
+  /* Report tables use an overflow wrapper on screen; printing must expose the
+   * full table so the browser can paginate it instead of clipping/scrolling. */
+  .print-report-table {
+    overflow: visible !important;
+  }
 }
 
 /* On-screen preview is shaped like the paper it produces (05 §7). */
@@ -118,7 +124,7 @@
     min-height: 0;
     /* Reserve physical-page header/footer clearance without changing the
      * approved @page margins. */
-    padding: 12mm 0 12mm;
+    padding: 30mm 0 15mm;
     box-shadow: none;
   }
 }
