@@ -51,7 +51,8 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
       loadProducts(),
       loadUnits(),
       loadProfile(),
-    ]).then(([recordResult, purchasesResult, suppliersResult, productsResult, unitsResult, profileResult]) => {
+    ]).then(
+      ([recordResult, purchasesResult, suppliersResult, productsResult, unitsResult, profileResult]) => {
       if (
         !recordResult.ok ||
         !purchasesResult.ok ||
@@ -68,8 +69,9 @@ export function ReturnPrint({ returnId }: { returnId: string }) {
       setProducts(productsResult.value);
       setUnits(unitsResult.value);
       setProfile(profileResult.value);
-      setReady(true);
-    });
+        setReady(true);
+      },
+    );
   }, [returnId, load, loadPurchases, loadSuppliers, loadProducts, loadUnits, loadProfile]);
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
