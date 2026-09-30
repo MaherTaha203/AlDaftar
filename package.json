@@ -27,7 +27,7 @@
   "dependencies": {
     "@fontsource/ibm-plex-sans-arabic": "^5.2.9",
     "@supabase/supabase-js": "^2.45.4",
-    "next": "^15.1.0",
+    "next": "^15.5.24",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -46,7 +46,7 @@
     "vitest": "^4.1.9"
   },
   "overrides": {
-    "sharp": "^0.35.0",
+    "sharp": "^0.35.4",
     "next": {
       "postcss": "^8.5.18"
     }
