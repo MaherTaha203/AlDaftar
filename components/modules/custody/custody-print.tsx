@@ -10,7 +10,7 @@ import {
 } from '@/lib/modules/settings';
 import { useOperation } from '@/components/framework';
 import { PrintLayout } from '@/components/layout';
-import { formatDate, Spinner } from '@/components/ui';
+import { formatDate, formatDateTime, Spinner } from '@/components/ui';
 import { CompanyHeader } from '../shared/company-header';
 
 /**
@@ -57,7 +57,7 @@ export function CustodyPrint({ custodyId }: { custodyId: string }) {
             : ''}
         </span>
       }
-      printedOn={`طُبع في ${formatDate(new Date().toISOString().slice(0, 10))}`}
+      printedOn={`طُبع في ${formatDateTime(new Date().toISOString())}`}
       onBack={() => router.back()}
       signature={<div className="flex flex-col gap-2xl">توقيع المُستلِم: ______________</div>}
     >
