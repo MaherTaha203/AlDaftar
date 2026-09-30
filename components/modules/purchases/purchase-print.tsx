@@ -21,7 +21,7 @@ import { amountInWords } from '@/lib/modules/shared/amount-in-words';
 import { BOOK_CURRENCY } from '@/lib/modules/shared/money';
 import { useOperation } from '@/components/framework';
 import { PrintLayout } from '@/components/layout';
-import { formatDate, MoneyDisplay, Spinner } from '@/components/ui';
+import { formatDate, formatDateTime, MoneyDisplay, Spinner } from '@/components/ui';
 import { CompanyHeader } from '../shared/company-header';
 
 /** PurchasePrint — print view S-24 (05 §2): purchase invoice document. */
@@ -68,7 +68,7 @@ export function PurchasePrint({ purchaseId }: { purchaseId: string }) {
       draft={isDraft}
       companyHeader={<CompanyHeader profile={profile} />}
       meta={`التاريخ: ${formatDate(purchase.date)}`}
-      printedOn={`طُبع في ${formatDate(new Date().toISOString().slice(0, 10))}`}
+      printedOn={`طُبع في ${formatDateTime(new Date().toISOString())}`}
       onBack={() => router.back()}
       totals={
         <div className="flex flex-col gap-xs">
